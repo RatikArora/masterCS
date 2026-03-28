@@ -44,18 +44,18 @@ class QuestionSelector:
 
         roll = random.random()
 
-        # First priority: previously wrong questions
-        if roll < 0.20:
+        # First priority: previously wrong questions (40% chance)
+        if roll < 0.40:
             result = self._get_previously_wrong_question()
             if result:
                 return result
 
-        if roll < 0.20 + settings.WEAK_QUESTION_RATIO:
+        if roll < 0.40 + settings.WEAK_QUESTION_RATIO * 0.7:
             result = self._get_weak_area_question()
             if result:
                 return result
 
-        if roll < 0.20 + settings.WEAK_QUESTION_RATIO + settings.REVISION_QUESTION_RATIO:
+        if roll < 0.40 + settings.WEAK_QUESTION_RATIO * 0.7 + settings.REVISION_QUESTION_RATIO * 0.7:
             result = self._get_revision_question()
             if result:
                 return result
@@ -144,9 +144,20 @@ class QuestionSelector:
         return self._build_result(chosen, self.concept_id)
 
     def _get_previously_wrong_question(self) -> dict | None:
-        """Select a question the user previously answered incorrectly for review."""
+        """Select a question the user previously answered incorrectly for review.
+        Uses a shorter cooldown (2 min) to aggressively reinforce weak areas."""
         concept_ids = self._get_subject_concept_ids()
-        recently_answered = self._get_recently_answered_ids()
+        # Shorter cooldown for wrong questions — come back quickly
+        wrong_cooloff = datetime.utcnow() - timedelta(minutes=2)
+        recently_seen = (
+            self.db.query(UserQuestionAttempt.question_id)
+            .filter(
+                UserQuestionAttempt.user_id == self.user_id,
+                UserQuestionAttempt.attempted_at > wrong_cooloff,
+            )
+            .all()
+        )
+        recently_seen_ids = {r[0] for r in recently_seen}
 
         # Find questions answered incorrectly that haven't been answered correctly since
         wrong_qids = (
@@ -180,9 +191,9 @@ class QuestionSelector:
         # Keep only questions still not answered correctly
         still_wrong = [qid for qid in wrong_ids if qid not in correct_set]
 
-        # Also exclude recently answered (cooldown)
-        if recently_answered:
-            still_wrong = [qid for qid in still_wrong if qid not in recently_answered]
+        # Also exclude recently seen (short cooldown)
+        if recently_seen_ids:
+            still_wrong = [qid for qid in still_wrong if qid not in recently_seen_ids]
 
         if not still_wrong:
             return None
