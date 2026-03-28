@@ -25,11 +25,12 @@ settings = get_settings()
 
 class QuestionSelector:
 
-    def __init__(self, db: Session, user_id: str, subject_id: str, concept_id: str | None = None):
+    def __init__(self, db: Session, user_id: str, subject_id: str, concept_id: str | None = None, topic_id: str | None = None):
         self.db = db
         self.user_id = user_id
         self.subject_id = subject_id
         self.concept_id = concept_id
+        self.topic_id = topic_id
 
     def select_next(self) -> dict | None:
         """
@@ -197,14 +198,16 @@ class QuestionSelector:
         return 1  # Easy
 
     def _get_subject_concept_ids(self) -> list[str]:
-        """Get all concept IDs for the current subject."""
-        rows = (
+        """Get concept IDs scoped to subject, or topic if set."""
+        query = (
             self.db.query(Concept.id)
             .join(Topic, Concept.topic_id == Topic.id)
-            .filter(Topic.subject_id == self.subject_id)
-            .all()
         )
-        return [r[0] for r in rows]
+        if self.topic_id:
+            query = query.filter(Topic.id == self.topic_id)
+        else:
+            query = query.filter(Topic.subject_id == self.subject_id)
+        return [r[0] for r in query.all()]
 
     def _get_weak_area_question(self) -> dict | None:
         """Select a question from user's weakest concepts."""
@@ -266,7 +269,6 @@ class QuestionSelector:
         concept_ids = self._get_subject_concept_ids()
         recently_answered = self._get_recently_answered_ids()
 
-        # Find concepts with zero or minimal exposure, in curriculum order
         explored = (
             self.db.query(UserConceptProgress.concept_id)
             .filter(
@@ -279,16 +281,19 @@ class QuestionSelector:
         explored_ids = {r[0] for r in explored}
 
         # Get next concept in order that hasn't been sufficiently explored
-        next_concept = (
+        query = (
             self.db.query(Concept)
             .join(Topic, Concept.topic_id == Topic.id)
-            .filter(
-                Topic.subject_id == self.subject_id,
-                not_(Concept.id.in_(explored_ids)) if explored_ids else True,
-            )
-            .order_by(Topic.order_index, Concept.order_index)
-            .first()
         )
+        if self.topic_id:
+            query = query.filter(Topic.id == self.topic_id)
+        else:
+            query = query.filter(Topic.subject_id == self.subject_id)
+
+        if explored_ids:
+            query = query.filter(not_(Concept.id.in_(explored_ids)))
+
+        next_concept = query.order_by(Topic.order_index, Concept.order_index).first()
 
         if not next_concept:
             return None

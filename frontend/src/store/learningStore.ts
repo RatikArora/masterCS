@@ -10,8 +10,9 @@ interface LearningState {
   questionStartTime: number;
   error: string | null;
   currentConceptId: string | null;
+  currentTopicId: string | null;
 
-  fetchNextQuestion: (subjectId: string, conceptId?: string) => Promise<void>;
+  fetchNextQuestion: (subjectId: string, conceptId?: string, topicId?: string) => Promise<void>;
   submitAnswer: (questionId: string, answer: string) => Promise<void>;
   dismissFeedback: () => void;
   reset: () => void;
@@ -26,11 +27,12 @@ export const useLearningStore = create<LearningState>((set, get) => ({
   questionStartTime: 0,
   error: null,
   currentConceptId: null,
+  currentTopicId: null,
 
-  fetchNextQuestion: async (subjectId, conceptId) => {
-    set({ isLoadingQuestion: true, error: null, result: null, showFeedback: false, currentConceptId: conceptId || null });
+  fetchNextQuestion: async (subjectId, conceptId, topicId) => {
+    set({ isLoadingQuestion: true, error: null, result: null, showFeedback: false, currentConceptId: conceptId || null, currentTopicId: topicId || null });
     try {
-      const { data } = await learningApi.getNextQuestion(subjectId, conceptId);
+      const { data } = await learningApi.getNextQuestion(subjectId, conceptId, topicId);
       set({ session: data, isLoadingQuestion: false, questionStartTime: Date.now() });
     } catch (err: any) {
       const msg = err.response?.data?.detail || 'Failed to load question';

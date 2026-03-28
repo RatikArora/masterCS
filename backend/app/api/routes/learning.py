@@ -22,12 +22,13 @@ router = APIRouter(prefix="/learn", tags=["Learning"])
 def get_next_question(
     subject_id: str,
     concept_id: str | None = Query(None, description="Focus on a specific concept"),
+    topic_id: str | None = Query(None, description="Focus on a specific topic"),
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    """Get the next adaptive question. Optionally scoped to a specific concept."""
+    """Get the next adaptive question. Optionally scoped to a concept or topic."""
     engine = LearningEngine(db, user.id)
-    session = engine.get_next_question(subject_id, concept_id=concept_id)
+    session = engine.get_next_question(subject_id, concept_id=concept_id, topic_id=topic_id)
 
     if not session:
         raise HTTPException(

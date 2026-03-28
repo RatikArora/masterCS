@@ -166,22 +166,31 @@ export default function TopicBrowser() {
                       {loadingConcepts === topic.id ? (
                         <p className="text-xs text-gray-400 text-center py-2">Loading concepts...</p>
                       ) : (
-                        concepts[topic.id]?.map((concept) => (
+                        <>
+                          {concepts[topic.id]?.map((concept) => (
+                            <button
+                              key={concept.id}
+                              onClick={() => navigate(`/learn?subject=${subjectId}&concept=${concept.id}`)}
+                              className="w-full flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-primary-50 transition-colors text-left group"
+                            >
+                              <MasteryBadge level={concept.mastery_level} size="sm" />
+                              <span className="text-sm text-gray-700 flex-1 group-hover:text-primary-700 transition-colors">{concept.name}</span>
+                              <span className="text-[10px] text-gray-400 mr-1">
+                                {Math.round(concept.confidence_score * 100)}%
+                              </span>
+                              <svg className="w-3.5 h-3.5 text-gray-300 group-hover:text-primary-400 transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                              </svg>
+                            </button>
+                          ))}
                           <button
-                            key={concept.id}
-                            onClick={() => navigate(`/learn?subject=${subjectId}&concept=${concept.id}`)}
-                            className="w-full flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-primary-50 transition-colors text-left group"
+                            onClick={() => navigate(`/learn?subject=${subjectId}&topic=${topic.id}`)}
+                            className="w-full mt-2 py-2 text-xs font-semibold text-primary-600 bg-primary-50 hover:bg-primary-100 rounded-lg transition-colors"
                           >
-                            <MasteryBadge level={concept.mastery_level} size="sm" />
-                            <span className="text-sm text-gray-700 flex-1 group-hover:text-primary-700 transition-colors">{concept.name}</span>
-                            <span className="text-[10px] text-gray-400 mr-1">
-                              {Math.round(concept.confidence_score * 100)}%
-                            </span>
-                            <svg className="w-3.5 h-3.5 text-gray-300 group-hover:text-primary-400 transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                            </svg>
+                            Practice All in {topic.name} →
                           </button>
-                        ))
+                        </>
+                      )}
                       )}
                     </div>
                   </motion.div>

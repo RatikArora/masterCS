@@ -67,9 +67,12 @@ export interface ConceptNotes {
 }
 
 export const learningApi = {
-  getNextQuestion: (subjectId: string, conceptId?: string) => {
-    const params = conceptId ? `?concept_id=${conceptId}` : '';
-    return api.get<LearningSession>(`/learn/next-question/${subjectId}${params}`);
+  getNextQuestion: (subjectId: string, conceptId?: string, topicId?: string) => {
+    const params = new URLSearchParams();
+    if (conceptId) params.set('concept_id', conceptId);
+    if (topicId) params.set('topic_id', topicId);
+    const qs = params.toString();
+    return api.get<LearningSession>(`/learn/next-question/${subjectId}${qs ? `?${qs}` : ''}`);
   },
 
   submitAnswer: (data: { question_id: string; selected_answer: string; response_time_ms: number }) =>

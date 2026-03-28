@@ -26,13 +26,14 @@ class LearningEngine:
     def __init__(self, db: Session, user_id: str):
         self.db = db
         self.user_id = user_id
-        self.selector = QuestionSelector(db, user_id, subject_id="", concept_id=None)
+        self.selector = QuestionSelector(db, user_id, subject_id="", concept_id=None, topic_id=None)
         self.tracker = MasteryTracker(db, user_id)
 
-    def get_next_question(self, subject_id: str, concept_id: str | None = None) -> LearningSession | None:
-        """Get the next adaptive question for the user. Optionally scoped to a concept."""
+    def get_next_question(self, subject_id: str, concept_id: str | None = None, topic_id: str | None = None) -> LearningSession | None:
+        """Get the next adaptive question for the user. Optionally scoped to a concept or topic."""
         self.selector.subject_id = subject_id
         self.selector.concept_id = concept_id
+        self.selector.topic_id = topic_id
 
         result = self.selector.select_next()
         if not result:

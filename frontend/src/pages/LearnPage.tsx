@@ -15,6 +15,7 @@ export default function LearnPage() {
   const [searchParams] = useSearchParams();
   const subjectId = searchParams.get('subject') || '';
   const conceptId = searchParams.get('concept') || undefined;
+  const topicId = searchParams.get('topic') || undefined;
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [showNotes, setShowNotes] = useState(false);
   const [notes, setNotes] = useState<ConceptNotes | null>(null);
@@ -26,8 +27,8 @@ export default function LearnPage() {
   } = useLearningStore();
 
   useEffect(() => {
-    if (subjectId) fetchNextQuestion(subjectId, conceptId);
-  }, [subjectId, conceptId]);
+    if (subjectId) fetchNextQuestion(subjectId, conceptId, topicId);
+  }, [subjectId, conceptId, topicId]);
 
   const handleSelect = useCallback((option: string) => {
     if (showFeedback || isSubmitting || selectedOption) return;
@@ -44,8 +45,8 @@ export default function LearnPage() {
     setShowNotes(false);
     setNotes(null);
     dismissFeedback();
-    if (subjectId) fetchNextQuestion(subjectId, conceptId);
-  }, [subjectId, conceptId, dismissFeedback, fetchNextQuestion]);
+    if (subjectId) fetchNextQuestion(subjectId, conceptId, topicId);
+  }, [subjectId, conceptId, topicId, dismissFeedback, fetchNextQuestion]);
 
   const handleShowNotes = useCallback(async () => {
     if (!session) return;
@@ -95,8 +96,8 @@ export default function LearnPage() {
 
   return (
     <div className="max-w-xl mx-auto px-4 py-6 pb-24 md:pb-8">
-      {/* Concept focus banner */}
-      {conceptId && (
+      {/* Focus mode banner */}
+      {(conceptId || topicId) && (
         <motion.div
           initial={{ opacity: 0, y: -5 }}
           animate={{ opacity: 1, y: 0 }}
@@ -106,7 +107,7 @@ export default function LearnPage() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
           </svg>
           <span className="text-xs font-medium text-primary-700 flex-1 truncate">
-            Focused: {question.concept_name}
+            {conceptId ? `Concept: ${question.concept_name}` : `Topic: ${question.topic_name}`}
           </span>
           <button
             onClick={() => window.location.href = `/learn?subject=${subjectId}`}
