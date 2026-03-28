@@ -1,7 +1,9 @@
+import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { AnswerResult } from '../../api/learning';
 import Button from '../ui/Button';
 import RichText from '../ui/RichText';
+import { sounds } from '../../utils/sounds';
 
 interface FeedbackOverlayProps {
   result: AnswerResult;
@@ -9,6 +11,19 @@ interface FeedbackOverlayProps {
 }
 
 export default function FeedbackOverlay({ result, onContinue }: FeedbackOverlayProps) {
+  const [showLesson, setShowLesson] = useState(false);
+
+  useEffect(() => {
+    if (result.is_correct) {
+      sounds.correct();
+      if (result.level_up) {
+        setTimeout(() => sounds.levelUp(), 400);
+      }
+    } else {
+      sounds.wrong();
+    }
+  }, [result]);
+
   return (
     <AnimatePresence>
       <motion.div
@@ -36,7 +51,7 @@ export default function FeedbackOverlay({ result, onContinue }: FeedbackOverlayP
               </svg>
             )}
           </div>
-          <div>
+          <div className="flex-1">
             <p className={`font-semibold ${result.is_correct ? 'text-green-800' : 'text-red-800'}`}>
               {result.is_correct ? 'Correct!' : 'Not quite right'}
             </p>
@@ -44,7 +59,32 @@ export default function FeedbackOverlay({ result, onContinue }: FeedbackOverlayP
               +{result.xp_earned} XP · {result.next_review_message}
             </p>
           </div>
+          {result.streak_count >= 3 && result.is_correct && (
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              className="flex items-center gap-1 bg-orange-100 text-orange-700 px-2 py-1 rounded-full text-xs font-bold"
+            >
+              <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z"/>
+              </svg>
+              {result.streak_count}x
+            </motion.div>
+          )}
         </div>
+
+        {/* Level up celebration */}
+        {result.level_up && (
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.3, type: 'spring' }}
+            className="mb-3 p-3 bg-gradient-to-r from-purple-100 to-indigo-100 rounded-xl border border-purple-200 text-center"
+          >
+            <p className="text-lg font-bold text-purple-700">Level Up!</p>
+            <p className="text-xs text-purple-500">Keep going — you're getting stronger!</p>
+          </motion.div>
+        )}
 
         {/* Correct answer (if wrong) */}
         {!result.is_correct && (
@@ -56,11 +96,62 @@ export default function FeedbackOverlay({ result, onContinue }: FeedbackOverlayP
 
         {/* Explanation */}
         {result.explanation && (
-          <div className="mb-4 px-3 py-2 bg-white/70 rounded-lg">
+          <div className="mb-3 px-3 py-2 bg-white/70 rounded-lg">
             <p className="text-xs text-gray-500 mb-0.5">Why?</p>
             <RichText content={result.explanation} className="text-sm text-gray-700 leading-relaxed" />
           </div>
         )}
+
+        {/* Lesson card (for wrong answers) */}
+        {result.lesson_card && !showLesson && (
+          <button
+            onClick={() => setShowLesson(true)}
+            className="w-full mb-3 px-3 py-2.5 bg-blue-50 border border-blue-100 rounded-xl text-left hover:bg-blue-100 transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <svg className="w-4 h-4 text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
+              <span className="text-sm font-medium text-blue-700">{result.lesson_card.title}</span>
+              <svg className="w-3 h-3 text-blue-400 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+          </button>
+        )}
+
+        <AnimatePresence>
+          {showLesson && result.lesson_card && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mb-3 overflow-hidden"
+            >
+              <div className="px-4 py-3 bg-blue-50 border border-blue-100 rounded-xl">
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="text-sm font-semibold text-blue-800">{result.lesson_card.title}</h4>
+                  <button onClick={() => setShowLesson(false)} className="text-blue-400 hover:text-blue-600">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                    </svg>
+                  </button>
+                </div>
+                <RichText content={result.lesson_card.content} className="text-xs text-blue-700 leading-relaxed mb-2" />
+                {result.lesson_card.key_points.length > 0 && (
+                  <div className="space-y-1 mt-2 pt-2 border-t border-blue-200/50">
+                    {result.lesson_card.key_points.map((pt, i) => (
+                      <p key={i} className="text-xs text-blue-600 flex gap-1.5">
+                        <span className="text-blue-400 flex-shrink-0">•</span>
+                        <RichText content={pt} />
+                      </p>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <Button onClick={onContinue} size="lg" className="w-full">
           Continue

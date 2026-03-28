@@ -10,6 +10,7 @@ import MasteryBadge from '../components/progress/MasteryBadge';
 import Loading from '../components/ui/Loading';
 import Button from '../components/ui/Button';
 import RichText from '../components/ui/RichText';
+import { sounds } from '../utils/sounds';
 
 export default function LearnPage() {
   const [searchParams] = useSearchParams();
@@ -32,6 +33,7 @@ export default function LearnPage() {
 
   const handleSelect = useCallback((option: string) => {
     if (showFeedback || isSubmitting || selectedOption) return;
+    sounds.select();
     setSelectedOption(option);
     if (session) {
       setTimeout(() => {

@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import get_settings
 from app.db.base import Base
 from app.db.session import engine
-from app.api.routes import auth_router, concepts_router, learning_router, progress_router
+from app.api.routes import auth_router, concepts_router, learning_router, progress_router, badges_router
 
 # Import all models so they register with Base.metadata
 import app.models  # noqa: F401
@@ -36,6 +36,7 @@ def create_app() -> FastAPI:
     app.include_router(concepts_router, prefix="/api")
     app.include_router(learning_router, prefix="/api")
     app.include_router(progress_router, prefix="/api")
+    app.include_router(badges_router, prefix="/api")
 
     @app.get("/api/health")
     def health_check():

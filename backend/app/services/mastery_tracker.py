@@ -6,6 +6,7 @@ Responsibilities:
   - Update spaced repetition params
   - Derive mastery level
   - Calculate XP earned
+  - Detect level-ups and trigger lesson cards
 """
 
 import uuid
@@ -14,6 +15,7 @@ from sqlalchemy.orm import Session
 
 from app.models.progress import UserConceptProgress, UserQuestionAttempt, UserDailyStats
 from app.models.question import Question
+from app.models.concept import Concept
 from app.models.user import User
 from app.services.spaced_repetition import calculate_next_review, calculate_confidence, get_mastery_level
 
@@ -22,6 +24,17 @@ from app.services.spaced_repetition import calculate_next_review, calculate_conf
 XP_TABLE = {1: 10, 2: 20, 3: 35}
 XP_STREAK_BONUS = 5  # per streak count, capped
 DAILY_GOAL = 10  # questions per day
+
+# Level thresholds (same as badges.py)
+_LEVELS = [0, 100, 300, 600, 1000, 1800, 3000, 5000, 8000, 12000]
+
+
+def _xp_level(xp: int) -> int:
+    level = 1
+    for threshold in _LEVELS:
+        if xp >= threshold:
+            level = _LEVELS.index(threshold) + 1
+    return level
 
 
 class MasteryTracker:
@@ -113,9 +126,28 @@ class MasteryTracker:
         # Calculate XP
         xp = self._calculate_xp(question.difficulty, is_correct, progress.correct_streak)
 
+        # Detect level-up before adding XP
+        old_xp = (self.db.query(User).filter(User.id == self.user_id).first()).total_xp or 0
+        old_level = _xp_level(old_xp)
+
         # Update daily stats & streaks
         self._update_daily_stats(is_correct, response_time_ms, xp)
         streak_info = self._update_user_streak(xp)
+
+        new_level = _xp_level(old_xp + xp)
+        level_up = new_level > old_level
+
+        # Build lesson card if wrong answer
+        lesson_card = None
+        if not is_correct:
+            concept = self.db.query(Concept).filter(Concept.id == concept_id).first()
+            if concept and concept.explanation:
+                lesson_card = {
+                    "title": f"Let's review: {concept.name}",
+                    "content": concept.explanation,
+                    "key_points": concept.key_points or [],
+                    "type": "mistake_fix",
+                }
 
         # Commit
         self.db.commit()
@@ -141,6 +173,9 @@ class MasteryTracker:
             "mastery_level": progress.mastery_level,
             "streak_count": streak_info["current_streak"],
             "next_review_message": review_msg,
+            "level_up": level_up,
+            "new_badges": [],
+            "lesson_card": lesson_card,
         }
 
     def _get_or_create_progress(self, concept_id: str) -> UserConceptProgress:

@@ -34,6 +34,13 @@ export interface LearningSession {
   concept_progress: ConceptProgressBrief;
 }
 
+export interface LessonCard {
+  title: string;
+  content: string;
+  key_points: string[];
+  type: 'intro' | 'review' | 'mistake_fix';
+}
+
 export interface AnswerResult {
   is_correct: boolean;
   correct_answer: string;
@@ -43,6 +50,9 @@ export interface AnswerResult {
   mastery_level: string;
   streak_count: number;
   next_review_message: string;
+  level_up: boolean;
+  new_badges: string[];
+  lesson_card: LessonCard | null;
 }
 
 export interface WrongQuestionItem {

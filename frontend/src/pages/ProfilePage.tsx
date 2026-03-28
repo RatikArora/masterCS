@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuthStore } from '../store/authStore';
 import { authApi } from '../api/auth';
 import { conceptsApi, type SubjectResponse } from '../api/concepts';
+import { badgesApi, type LevelInfo } from '../api/badges';
 import PageContainer from '../components/layout/PageContainer';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
@@ -31,9 +32,11 @@ export default function ProfilePage() {
   const [saved, setSaved] = useState(false);
   const [subjects, setSubjects] = useState<SubjectResponse[]>([]);
   const [resetting, setResetting] = useState<string | null>(null);
+  const [level, setLevel] = useState<LevelInfo | null>(null);
 
   useEffect(() => {
     conceptsApi.getSubjects().then((r) => setSubjects(r.data)).catch(() => {});
+    badgesApi.getBadges().then((r) => setLevel(r.data.level)).catch(() => {});
     refreshUser();
   }, []);
 
@@ -109,6 +112,27 @@ export default function ProfilePage() {
               <p className="text-[10px] text-gray-400">Best Streak</p>
             </div>
           </div>
+
+          {/* Level & Badges link */}
+          {level && (
+            <Link to="/badges" className="block">
+              <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl border border-indigo-100 hover:shadow-sm transition-shadow">
+                <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-lg flex items-center justify-center text-white font-bold text-sm">
+                  {level.level}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-gray-800">{level.title}</p>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <div className="flex-1 bg-indigo-200/50 rounded-full h-1.5 overflow-hidden">
+                      <div className="bg-indigo-500 h-full rounded-full" style={{ width: `${level.progress}%` }} />
+                    </div>
+                    <span className="text-[10px] text-gray-400">{level.current_xp}/{level.xp_for_next}</span>
+                  </div>
+                </div>
+                <span className="text-xs text-indigo-500 font-medium">Badges →</span>
+              </div>
+            </Link>
+          )}
         </Card>
 
         {/* Edit Profile */}

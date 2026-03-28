@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { conceptsApi, type SubjectResponse } from '../api/concepts';
 import { progressApi, type StreakInfo, type WeakArea } from '../api/progress';
+import { badgesApi, type LevelInfo } from '../api/badges';
 import { useAuthStore } from '../store/authStore';
 import PageContainer from '../components/layout/PageContainer';
 import Card from '../components/ui/Card';
@@ -23,6 +24,7 @@ export default function Dashboard() {
   const [subjects, setSubjects] = useState<SubjectResponse[]>([]);
   const [streak, setStreak] = useState<StreakInfo | null>(null);
   const [weakAreas, setWeakAreas] = useState<WeakArea[]>([]);
+  const [level, setLevel] = useState<LevelInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [pickingDegree, setPickingDegree] = useState(false);
   const navigate = useNavigate();
@@ -32,6 +34,7 @@ export default function Dashboard() {
     Promise.all([
       conceptsApi.getSubjects().then((r) => setSubjects(r.data)),
       progressApi.getStreak().then((r) => setStreak(r.data)),
+      badgesApi.getBadges().then((r) => setLevel(r.data.level)).catch(() => {}),
     ]).finally(() => setLoading(false));
   };
 
@@ -105,7 +108,7 @@ export default function Dashboard() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="flex flex-wrap items-center gap-3 mb-6"
+        className="flex flex-wrap items-center gap-3 mb-4"
       >
         <StreakCounter count={streak?.current_streak || 0} isActive={streak?.today_completed} />
         <div className="text-sm">
@@ -117,6 +120,39 @@ export default function Dashboard() {
           <XPBar current={streak.questions_today * 15} goal={150} />
         )}
       </motion.div>
+
+      {/* Level & Badges card */}
+      {level && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="mb-6"
+        >
+          <Link to="/badges" className="block">
+            <div className="flex items-center gap-4 bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100 rounded-2xl px-4 py-3 hover:shadow-sm transition-shadow">
+              <div className="w-11 h-11 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center text-white font-bold text-base shadow-sm">
+                {level.level}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-gray-800">{level.title}</p>
+                <div className="flex items-center gap-2 mt-1">
+                  <div className="flex-1 bg-indigo-200/50 rounded-full h-1.5 overflow-hidden">
+                    <div
+                      className="bg-indigo-500 h-full rounded-full transition-all"
+                      style={{ width: `${level.progress}%` }}
+                    />
+                  </div>
+                  <span className="text-[10px] text-gray-400">{level.current_xp}/{level.xp_for_next}</span>
+                </div>
+              </div>
+              <svg className="w-4 h-4 text-indigo-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </Link>
+        </motion.div>
+      )}
 
       {/* Subjects */}
       <div className="space-y-3">

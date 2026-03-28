@@ -32,6 +32,18 @@ class AnswerResult(BaseModel):
     mastery_level: str
     streak_count: int
     next_review_message: str
+    # Gamification extras
+    level_up: bool = False
+    new_badges: list[str] = []  # badge names just earned
+    lesson_card: "LessonCard | None" = None
+
+
+class LessonCard(BaseModel):
+    """Mini-lesson shown between questions."""
+    title: str
+    content: str  # markdown
+    key_points: list[str]
+    type: str  # "intro" | "review" | "mistake_fix"
 
 
 class LearningSession(BaseModel):
