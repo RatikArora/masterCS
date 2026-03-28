@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { progressApi, type OverallProgress, type TopicProgress, type WeakArea, type DailyStats } from '../api/progress';
-import { conceptsApi } from '../api/concepts';
+import { conceptsApi, type SubjectResponse } from '../api/concepts';
 import { learningApi, type WrongQuestionItem } from '../api/learning';
 import PageContainer from '../components/layout/PageContainer';
 import Card from '../components/ui/Card';
@@ -48,6 +48,226 @@ function MiniBar({ data }: { data: DailyStats[] }) {
   );
 }
 
+const subjectPalette = ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#22c55e', '#06b6d4'];
+
+function DonutChart({ distribution, total }: { distribution: Record<string, number>; total: number }) {
+  const size = 140;
+  const sw = 24;
+  const r = (size - sw) / 2;
+  const C = 2 * Math.PI * r;
+  let cum = 0;
+  const segs = Object.entries(distribution)
+    .filter(([, c]) => c > 0)
+    .map(([level, count], i) => {
+      const len = (count / Math.max(total, 1)) * C;
+      const off = cum;
+      cum += len;
+      return { level, count, len, off, delay: i * 0.12 };
+    });
+
+  return (
+    <div className="relative inline-flex items-center justify-center" style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="-rotate-90">
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#f3f4f6" strokeWidth={sw} />
+        {segs.map((s) => (
+          <motion.circle
+            key={s.level}
+            cx={size / 2} cy={size / 2} r={r}
+            fill="none"
+            stroke={masteryColors[s.level]}
+            strokeWidth={sw}
+            strokeLinecap="butt"
+            strokeDasharray={`${s.len} ${C - s.len}`}
+            strokeDashoffset={-s.off}
+            initial={{ strokeDasharray: `0 ${C}` }}
+            animate={{ strokeDasharray: `${s.len} ${C - s.len}` }}
+            transition={{ duration: 0.8, delay: s.delay, ease: 'easeOut' }}
+          />
+        ))}
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className="text-xl font-bold text-gray-900">{total}</span>
+        <span className="text-[9px] text-gray-400">concepts</span>
+      </div>
+    </div>
+  );
+}
+
+function WeeklyHeatmap({ data }: { data: DailyStats[] }) {
+  const last7 = data.slice(-7);
+  const maxQ = Math.max(...last7.map((d) => d.questions_answered), 1);
+  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const intensity = (n: number) => {
+    if (n === 0) return 'bg-gray-100';
+    const ratio = n / maxQ;
+    if (ratio <= 0.25) return 'bg-green-200';
+    if (ratio <= 0.5) return 'bg-green-300';
+    if (ratio <= 0.75) return 'bg-green-500';
+    return 'bg-green-600';
+  };
+
+  return (
+    <div className="flex gap-1.5">
+      {last7.map((d, i) => {
+        const dow = new Date(d.date + 'T12:00:00').getDay();
+        return (
+          <motion.div
+            key={d.date}
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: i * 0.06 }}
+            className="flex-1 flex flex-col items-center gap-1"
+          >
+            <span className="text-[9px] text-gray-400">{dayNames[dow]}</span>
+            <div
+              className={`w-full aspect-square rounded-lg ${intensity(d.questions_answered)} flex items-center justify-center`}
+              title={`${d.date}: ${d.questions_answered} questions`}
+            >
+              {d.questions_answered > 0 && (
+                <span className={`text-[10px] font-semibold ${d.questions_answered / maxQ > 0.5 ? 'text-white' : 'text-green-800'}`}>
+                  {d.questions_answered}
+                </span>
+              )}
+            </div>
+          </motion.div>
+        );
+      })}
+    </div>
+  );
+}
+
+function AccuracyTrendLine({ data }: { data: DailyStats[] }) {
+  const pts = data.filter((d) => d.questions_answered > 0).slice(-10);
+  if (pts.length < 2) return <p className="text-xs text-gray-400 text-center py-6">Need more sessions for accuracy trend</p>;
+  const W = 320, H = 140;
+  const P = { t: 15, r: 15, b: 28, l: 35 };
+  const cw = W - P.l - P.r, ch = H - P.t - P.b;
+  const accs = pts.map((d) => d.accuracy);
+  const lo = Math.max(0, Math.floor(Math.min(...accs) / 10) * 10 - 5);
+  const hi = Math.min(100, Math.ceil(Math.max(...accs) / 10) * 10 + 5);
+  const rng = hi - lo || 1;
+  const coords = pts.map((d, i) => ({
+    x: P.l + (i / (pts.length - 1)) * cw,
+    y: P.t + ch - ((d.accuracy - lo) / rng) * ch,
+    acc: d.accuracy, date: d.date,
+  }));
+  const line = coords.map((c, i) => `${i === 0 ? 'M' : 'L'}${c.x},${c.y}`).join(' ');
+  const area = `${line} L${coords[coords.length - 1].x},${P.t + ch} L${coords[0].x},${P.t + ch} Z`;
+
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full" preserveAspectRatio="xMidYMid meet">
+      <defs>
+        <linearGradient id="trendFill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.15" />
+          <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.01" />
+        </linearGradient>
+      </defs>
+      {[0, 0.5, 1].map((p) => {
+        const y = P.t + ch * (1 - p);
+        return (
+          <g key={p}>
+            <line x1={P.l} y1={y} x2={W - P.r} y2={y} stroke="#f3f4f6" strokeWidth="1" />
+            <text x={P.l - 5} y={y + 3} textAnchor="end" fontSize="7" fill="#9ca3af">{Math.round(lo + rng * p)}%</text>
+          </g>
+        );
+      })}
+      <motion.path d={area} fill="url(#trendFill)" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8 }} />
+      <motion.path
+        d={line} fill="none" stroke="#3b82f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+        initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1, ease: 'easeOut' }}
+      />
+      {coords.map((c, i) => (
+        <motion.circle
+          key={i} cx={c.x} cy={c.y} r="3.5" fill="white" stroke="#3b82f6" strokeWidth="1.5"
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 + i * 0.06 }}
+        >
+          <title>{`${c.date}: ${Math.round(c.acc)}%`}</title>
+        </motion.circle>
+      ))}
+      {coords.filter((_, i) => i === 0 || i === coords.length - 1).map((c) => (
+        <text key={c.date} x={c.x} y={H - 6} textAnchor="middle" fontSize="7" fill="#9ca3af">{c.date.slice(5)}</text>
+      ))}
+    </svg>
+  );
+}
+
+function SubjectComparisonBars({ subjects, overviews }: { subjects: SubjectResponse[]; overviews: Record<string, OverallProgress> }) {
+  const items = subjects
+    .filter((s) => overviews[s.id])
+    .map((s, i) => {
+      const ov = overviews[s.id];
+      return {
+        name: s.name,
+        color: s.color || subjectPalette[i % subjectPalette.length],
+        accuracy: Math.round(ov.overall_accuracy),
+        questions: ov.total_questions_answered,
+        masteryPct: ov.total_concepts > 0 ? Math.round((ov.concepts_mastered / ov.total_concepts) * 100) : 0,
+      };
+    });
+
+  if (items.length === 0) return <p className="text-xs text-gray-400 text-center py-6">No subject data available</p>;
+
+  const maxQ = Math.max(...items.map((d) => d.questions), 1);
+  const metrics: { label: string; key: 'accuracy' | 'questions' | 'masteryPct'; max: number; suffix: string }[] = [
+    { label: 'Accuracy', key: 'accuracy', max: 100, suffix: '%' },
+    { label: 'Questions Attempted', key: 'questions', max: maxQ, suffix: '' },
+    { label: 'Mastery', key: 'masteryPct', max: 100, suffix: '%' },
+  ];
+
+  return (
+    <div className="space-y-5">
+      <div className="flex flex-wrap gap-3">
+        {items.map((d) => (
+          <div key={d.name} className="flex items-center gap-1.5">
+            <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: d.color }} />
+            <span className="text-xs text-gray-600">{d.name}</span>
+          </div>
+        ))}
+      </div>
+      {metrics.map((m) => (
+        <div key={m.label}>
+          <p className="text-xs text-gray-500 mb-2">{m.label}</p>
+          <div className="space-y-2">
+            {items.map((d, i) => {
+              const val = d[m.key];
+              const pct = (val / m.max) * 100;
+              return (
+                <motion.div
+                  key={d.name}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.06 }}
+                  className="flex items-center gap-2"
+                >
+                  <span className="text-[10px] text-gray-500 w-16 truncate">{d.name}</span>
+                  <div className="flex-1 h-7 bg-gray-100 rounded-lg overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${Math.max(pct, 3)}%` }}
+                      transition={{ duration: 0.8, ease: 'easeOut' }}
+                      className="h-full rounded-lg flex items-center justify-end pr-2"
+                      style={{ backgroundColor: d.color }}
+                    >
+                      {pct > 15 && (
+                        <span className="text-[10px] font-semibold text-white drop-shadow-sm">
+                          {val}{m.suffix}
+                        </span>
+                      )}
+                    </motion.div>
+                  </div>
+                  {pct <= 15 && (
+                    <span className="text-[10px] font-semibold text-gray-500">{val}{m.suffix}</span>
+                  )}
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function ProgressPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -57,8 +277,10 @@ export default function ProgressPage() {
   const [weakAreas, setWeakAreas] = useState<WeakArea[]>([]);
   const [wrongQuestions, setWrongQuestions] = useState<WrongQuestionItem[]>([]);
   const [dailyStats, setDailyStats] = useState<DailyStats[]>([]);
+  const [allSubjects, setAllSubjects] = useState<SubjectResponse[]>([]);
+  const [allOverviews, setAllOverviews] = useState<Record<string, OverallProgress>>({});
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'overview' | 'topics' | 'mistakes'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'topics' | 'analytics' | 'mistakes'>('overview');
 
   useEffect(() => {
     if (subjectId) {
@@ -76,12 +298,25 @@ export default function ProgressPage() {
 
   const loadData = (sid: string) => {
     setLoading(true);
+    const subjectsPromise = conceptsApi.getSubjects().then((r) => {
+      setAllSubjects(r.data);
+      return Promise.all(
+        r.data.map((s) =>
+          progressApi.getOverview(s.id).then((res) => [s.id, res.data] as const).catch(() => null)
+        )
+      ).then((results) => {
+        const map: Record<string, OverallProgress> = {};
+        for (const r of results) if (r) map[r[0]] = r[1];
+        setAllOverviews(map);
+      });
+    }).catch(() => {});
     Promise.all([
       progressApi.getOverview(sid).then((r) => setOverview(r.data)).catch(() => {}),
       progressApi.getTopicProgress(sid).then((r) => setTopics(r.data)).catch(() => {}),
       progressApi.getWeakAreas(sid).then((r) => setWeakAreas(r.data.items)).catch(() => {}),
       learningApi.getWrongQuestions(sid, 1, 20).then((r) => setWrongQuestions(r.data.items)).catch(() => {}),
-      progressApi.getDailyStats(14).then((r) => setDailyStats(r.data.items)).catch(() => {}),
+      progressApi.getDailyStats(30).then((r) => setDailyStats(r.data.items)).catch(() => {}),
+      subjectsPromise,
     ]).finally(() => setLoading(false));
   };
 
@@ -93,6 +328,11 @@ export default function ProgressPage() {
   const completionPct = overview.total_concepts > 0
     ? Math.round((overview.concepts_mastered / overview.total_concepts) * 100)
     : 0;
+
+  const totalDailyQuestions = dailyStats.reduce((a, d) => a + d.questions_answered, 0);
+  const totalTimeMinutes = dailyStats.reduce((a, d) => a + d.time_spent_minutes, 0);
+  const avgSpeedSeconds = totalDailyQuestions > 0 ? Math.round((totalTimeMinutes * 60) / totalDailyQuestions) : 0;
+  const subjectsCovered = allSubjects.filter((s) => allOverviews[s.id] && allOverviews[s.id].total_questions_answered > 0).length;
 
   return (
     <PageContainer>
@@ -113,7 +353,7 @@ export default function ProgressPage() {
 
       {/* Tab Switcher */}
       <div className="flex gap-1 bg-gray-100 rounded-xl p-1 mb-6">
-        {(['overview', 'topics', 'mistakes'] as const).map((tab) => (
+        {(['overview', 'topics', 'analytics', 'mistakes'] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -123,7 +363,7 @@ export default function ProgressPage() {
                 : 'text-gray-500 hover:text-gray-700'
             }`}
           >
-            {tab === 'overview' ? 'Overview' : tab === 'topics' ? 'Topics' : `Mistakes${wrongQuestions.length > 0 ? ` (${wrongQuestions.length})` : ''}`}
+            {tab === 'overview' ? 'Overview' : tab === 'topics' ? 'Topics' : tab === 'analytics' ? 'Analytics' : `Mistakes${wrongQuestions.length > 0 ? ` (${wrongQuestions.length})` : ''}`}
           </button>
         ))}
       </div>
@@ -132,12 +372,14 @@ export default function ProgressPage() {
       {activeTab === 'overview' && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
           {/* Stats Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
             {[
-              { label: 'Concepts', value: `${overview.concepts_started}/${overview.total_concepts}`, sub: 'started', color: 'text-blue-600' },
-              { label: 'Mastered', value: overview.concepts_mastered, sub: 'concepts', color: 'text-purple-600' },
-              { label: 'Accuracy', value: `${overview.overall_accuracy}%`, sub: `${totalAnswered} answered`, color: 'text-green-600' },
-              { label: 'Total XP', value: overview.total_xp.toLocaleString(), sub: 'earned', color: 'text-amber-600' },
+              { label: 'Total Questions', value: totalAnswered.toLocaleString(), sub: 'answered', color: 'text-blue-600', icon: '📝' },
+              { label: 'Accuracy', value: `${Math.round(overview.overall_accuracy)}%`, sub: `${totalAnswered > 0 ? Math.round((overview.overall_accuracy / 100) * totalAnswered) : 0} correct`, color: 'text-green-600', icon: '🎯' },
+              { label: 'Best Streak', value: overview.longest_streak, sub: `current: ${overview.current_streak}`, color: 'text-orange-600', icon: '🔥' },
+              { label: 'Total XP', value: overview.total_xp.toLocaleString(), sub: 'earned', color: 'text-amber-600', icon: '⭐' },
+              { label: 'Avg Speed', value: avgSpeedSeconds > 0 ? `${avgSpeedSeconds}s` : '—', sub: 'per question', color: 'text-purple-600', icon: '⚡' },
+              { label: 'Subjects', value: subjectsCovered || allSubjects.length, sub: 'covered', color: 'text-cyan-600', icon: '📚' },
             ].map((stat, i) => (
               <motion.div
                 key={stat.label}
@@ -146,7 +388,7 @@ export default function ProgressPage() {
                 transition={{ delay: i * 0.05 }}
               >
                 <Card padding="sm" className="text-center">
-                  <p className="text-xs text-gray-400 mb-1">{stat.label}</p>
+                  <p className="text-xs text-gray-400 mb-1">{stat.icon} {stat.label}</p>
                   <p className={`text-xl font-bold ${stat.color}`}>{stat.value}</p>
                   <p className="text-[10px] text-gray-400">{stat.sub}</p>
                 </Card>
@@ -163,7 +405,7 @@ export default function ProgressPage() {
                   {dailyStats.reduce((a, d) => a + d.questions_answered, 0)} questions total
                 </p>
               </div>
-              <MiniBar data={dailyStats} />
+              <MiniBar data={dailyStats.slice(-14)} />
               <div className="flex justify-between mt-1 text-[9px] text-gray-400">
                 <span>{dailyStats[0]?.date.slice(5)}</span>
                 <span>Today</span>
@@ -174,33 +416,45 @@ export default function ProgressPage() {
           {/* Mastery Distribution */}
           <Card className="mb-6">
             <h3 className="text-sm font-semibold text-gray-700 mb-3">Mastery Distribution</h3>
-            <div className="flex gap-1 h-5 rounded-full overflow-hidden bg-gray-100">
-              {Object.entries(dist).map(([level, count]) => {
-                const pct = overview.total_concepts > 0 ? (count / overview.total_concepts) * 100 : 0;
-                if (pct === 0) return null;
-                return (
-                  <motion.div
-                    key={level}
-                    initial={{ width: 0 }}
-                    animate={{ width: `${pct}%` }}
-                    transition={{ duration: 0.8, ease: 'easeOut' }}
-                    className="h-full"
-                    style={{ backgroundColor: masteryColors[level] }}
-                    title={`${level}: ${count}`}
-                  />
-                );
-              })}
-            </div>
-            <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 mt-3">
-              {Object.entries(dist).map(([level, count]) => (
-                <div key={level} className="text-center p-1.5 bg-gray-50 rounded-lg">
-                  <span className="w-2.5 h-2.5 rounded-full inline-block mb-1" style={{ backgroundColor: masteryColors[level] }} />
-                  <p className="text-xs font-semibold text-gray-700">{count}</p>
-                  <p className="text-[9px] text-gray-400">{masteryLabels[level] || level}</p>
-                </div>
-              ))}
+            <div className="flex flex-col sm:flex-row items-center gap-4">
+              <DonutChart distribution={dist} total={overview.total_concepts} />
+              <div className="grid grid-cols-3 sm:grid-cols-1 gap-2 flex-1 w-full sm:w-auto">
+                {Object.entries(dist).map(([level, count]) => {
+                  const pct = overview.total_concepts > 0 ? Math.round((count / overview.total_concepts) * 100) : 0;
+                  return (
+                    <div key={level} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
+                      <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: masteryColors[level] }} />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-sm font-semibold text-gray-700">{count}</span>
+                          <span className="text-[9px] text-gray-400">({pct}%)</span>
+                        </div>
+                        <p className="text-[9px] text-gray-400 truncate">{masteryLabels[level] || level}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </Card>
+
+          {/* Weekly Activity Heatmap */}
+          {dailyStats.length >= 7 && (
+            <Card className="mb-6">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-semibold text-gray-700">This Week</h3>
+                <div className="flex items-center gap-1 text-[9px] text-gray-400">
+                  <span>Less</span>
+                  <span className="w-3 h-3 rounded bg-gray-100" />
+                  <span className="w-3 h-3 rounded bg-green-200" />
+                  <span className="w-3 h-3 rounded bg-green-400" />
+                  <span className="w-3 h-3 rounded bg-green-600" />
+                  <span>More</span>
+                </div>
+              </div>
+              <WeeklyHeatmap data={dailyStats} />
+            </Card>
+          )}
 
           {/* Streak & Performance */}
           <div className="grid grid-cols-2 gap-3 mb-6">
@@ -293,6 +547,61 @@ export default function ProgressPage() {
             >
               Continue Learning →
             </Link>
+          )}
+        </motion.div>
+      )}
+
+      {/* Analytics Tab */}
+      {activeTab === 'analytics' && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+          {/* Subject Comparison */}
+          <Card>
+            <h3 className="text-sm font-semibold text-gray-700 mb-4">Subject Comparison</h3>
+            <SubjectComparisonBars subjects={allSubjects} overviews={allOverviews} />
+          </Card>
+
+          {/* Accuracy Trend */}
+          <Card>
+            <h3 className="text-sm font-semibold text-gray-700 mb-3">Accuracy Trend</h3>
+            <AccuracyTrendLine data={dailyStats} />
+          </Card>
+
+          {/* Per-Subject Stats */}
+          {allSubjects.filter((s) => allOverviews[s.id]).length > 0 && (
+            <Card>
+              <h3 className="text-sm font-semibold text-gray-700 mb-3">Subject Details</h3>
+              <div className="space-y-3">
+                {allSubjects.filter((s) => allOverviews[s.id]).map((s, i) => {
+                  const ov = allOverviews[s.id];
+                  return (
+                    <motion.div
+                      key={s.id}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.08 }}
+                      className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl"
+                    >
+                      <span
+                        className="w-3 h-3 rounded-full flex-shrink-0"
+                        style={{ backgroundColor: s.color || subjectPalette[i % subjectPalette.length] }}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-800 truncate">{s.name}</p>
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-0.5 text-[10px] text-gray-400">
+                          <span>{ov.total_questions_answered} questions</span>
+                          <span>{Math.round(ov.overall_accuracy)}% accuracy</span>
+                          <span>{ov.concepts_mastered}/{ov.total_concepts} mastered</span>
+                        </div>
+                      </div>
+                      <div className="text-right flex-shrink-0">
+                        <p className="text-sm font-bold text-amber-600">{ov.total_xp.toLocaleString()}</p>
+                        <p className="text-[9px] text-gray-400">XP</p>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </Card>
           )}
         </motion.div>
       )}
