@@ -213,6 +213,11 @@ export default function LearnPage() {
               Attempt #{question.attempt_number + 1}
             </span>
           )}
+          {session.selection_reason && (
+            <span className="text-[10px] text-slate-400 italic truncate max-w-[200px]" title={session.selection_reason}>
+              {session.selection_reason}
+            </span>
+          )}
           <div className="ml-auto flex items-center gap-1.5">
             <button
               onClick={handleShowNotes}

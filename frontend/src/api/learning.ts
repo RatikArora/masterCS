@@ -38,6 +38,7 @@ export interface LearningSession {
   session_stats: SessionStats;
   concept_progress: ConceptProgressBrief;
   cooldown_questions: CooldownItem[];
+  selection_reason: string;
 }
 
 export interface LessonCard {

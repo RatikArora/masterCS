@@ -106,6 +106,7 @@ class LearningEngine:
             session_stats=session_stats,
             concept_progress=concept_brief,
             cooldown_questions=result.get("cooldown_questions", []),
+            selection_reason=result.get("selection_reason", ""),
         )
 
     def submit_answer(self, answer: AnswerSubmit) -> AnswerResult:

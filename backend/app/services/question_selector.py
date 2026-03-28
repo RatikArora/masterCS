@@ -115,8 +115,8 @@ class QuestionSelector:
         # Score each candidate
         scored = []
         for question, q_concept_id in candidates:
-            score = self._score_question(question, q_concept_id)
-            scored.append((question, q_concept_id, score))
+            score, reasons = self._score_question_with_reasons(question, q_concept_id)
+            scored.append((question, q_concept_id, score, reasons))
 
         # Sort by score descending
         scored.sort(key=lambda x: x[2], reverse=True)
@@ -130,14 +130,14 @@ class QuestionSelector:
         total_w = sum(weights)
         r = random.random() * total_w
         cumulative = 0.0
-        chosen_q, chosen_cid = top[0][0], top[0][1]
-        for q, cid, sc in top:
+        chosen_q, chosen_cid, chosen_reasons = top[0][0], top[0][1], top[0][3]
+        for q, cid, sc, reasons in top:
             cumulative += max(sc, 0.1)
             if r <= cumulative:
-                chosen_q, chosen_cid = q, cid
+                chosen_q, chosen_cid, chosen_reasons = q, cid, reasons
                 break
 
-        return self._build_result(chosen_q, chosen_cid)
+        return self._build_result(chosen_q, chosen_cid, chosen_reasons)
 
     # ── Data preloading (bulk queries — no N+1) ─────────────────────
 
@@ -328,9 +328,10 @@ class QuestionSelector:
 
     # ── Scoring engine ──────────────────────────────────────────────
 
-    def _score_question(self, question: Question, concept_id: str) -> float:
-        """Compute a priority score for a single question using 10 factors."""
+    def _score_question_with_reasons(self, question: Question, concept_id: str) -> tuple[float, list[str]]:
+        """Score a question and collect human-readable reasons for the selection."""
         score = 0.0
+        reasons: list[str] = []
         now = datetime.utcnow()
         progress = self._concept_progress_map.get(concept_id)
 
@@ -338,14 +339,16 @@ class QuestionSelector:
         wrong_count = self._wrong_question_map.get(question.id, 0)
         if wrong_count > 0:
             score += WEIGHT_WRONG_ANSWER + (wrong_count - 1) * WEIGHT_WRONG_REPEAT
+            reasons.append(f"You got this wrong {wrong_count}× — time to master it")
 
         # ── Factor 2: Concept weakness ──
         if progress:
             weakness = 1.0 - progress.confidence_score
             score += weakness * WEIGHT_CONCEPT_WEAKNESS
-
             if progress.error_streak > 0:
                 score += progress.error_streak * WEIGHT_ERROR_STREAK
+            if weakness > 0.5:
+                reasons.append("Strengthening a weak concept")
 
         # ── Factor 3: Spaced repetition overdue (with forgetting curve) ──
         if progress and progress.next_review_at and progress.exposure_count > 0:
@@ -353,8 +356,8 @@ class QuestionSelector:
                 overdue_hours = (now - progress.next_review_at).total_seconds() / 3600
                 overdue_factor = min(overdue_hours / 168, 1.0)
                 score += WEIGHT_SR_OVERDUE * (0.5 + 0.5 * overdue_factor)
+                reasons.append("Due for spaced repetition review")
             else:
-                # Not yet due but approaching — small bonus for imminent reviews
                 hours_until = (progress.next_review_at - now).total_seconds() / 3600
                 if hours_until < 6:
                     approaching_factor = 1.0 - (hours_until / 6)
@@ -363,6 +366,7 @@ class QuestionSelector:
         # ── Factor 4: Novelty (unseen concept) ──
         if not progress or progress.exposure_count == 0:
             score += WEIGHT_NOVELTY
+            reasons.append("Exploring a new concept")
 
         # ── Factor 5: Difficulty match (momentum-aware) ──
         target = self._target_diff
@@ -381,9 +385,11 @@ class QuestionSelector:
         slowness = self._slow_correct_concepts.get(concept_id, 0)
         if slowness > 0:
             score += WEIGHT_SLOW_CORRECT * min(slowness, 1.5)
+            if slowness > 0.5:
+                reasons.append("You answered slowly last time — reinforcing")
 
         # ── Factor 7: Session diversity (concept-level) ──
-        if not self.concept_id:  # Only in normal mode, not concept-focused
+        if not self.concept_id:
             concept_seen = self._session_concept_counts.get(concept_id, 0)
             if concept_seen > 2:
                 score += WEIGHT_SESSION_DIVERSITY * min(concept_seen - 2, 4)
@@ -400,11 +406,13 @@ class QuestionSelector:
         if self._recent_momentum > 0.3:
             if question.difficulty >= 2:
                 score += WEIGHT_MOMENTUM_BOOST * self._recent_momentum
+                if question.difficulty == 3:
+                    reasons.append("You're on fire — leveling up difficulty")
         elif self._recent_momentum < -0.3:
             if question.difficulty <= 2:
                 score += WEIGHT_MOMENTUM_BOOST * abs(self._recent_momentum)
 
-        # ── Factor 10: Mastery proximity (close to leveling up → motivating boost) ──
+        # ── Factor 10: Mastery proximity ──
         if progress and progress.confidence_score > 0:
             current_level_idx = _MASTERY_ORDER.index(progress.mastery_level) if progress.mastery_level in _MASTERY_ORDER else 0
             if current_level_idx < len(_MASTERY_ORDER) - 1:
@@ -414,6 +422,7 @@ class QuestionSelector:
                 if 0 < distance <= 0.15:
                     proximity = 1.0 - (distance / 0.15)
                     score += WEIGHT_MASTERY_PROXIMITY * proximity
+                    reasons.append(f"Almost {next_level} — one more push!")
 
         # ── Factor 11: Recency penalty (gentle) ──
         last_seen = self._attempt_times.get(question.id)
@@ -422,6 +431,14 @@ class QuestionSelector:
             if hours_ago < 1:
                 score -= RECENCY_PENALTY_PER_HOUR * (1 - hours_ago)
 
+        if not reasons:
+            reasons.append("Adaptive selection based on your learning profile")
+
+        return score, reasons
+
+    def _score_question(self, question: Question, concept_id: str) -> float:
+        """Compute score only (no reasons) — used for batch scoring."""
+        score, _ = self._score_question_with_reasons(question, concept_id)
         return score
 
     # ── Helper methods ──────────────────────────────────────────────
@@ -475,8 +492,8 @@ class QuestionSelector:
             query = query.filter(Topic.subject_id == self.subject_id)
         return [r[0] for r in query.all()]
 
-    def _build_result(self, question: Question, concept_id: str) -> dict:
-        """Build the response dict with question + context."""
+    def _build_result(self, question: Question, concept_id: str, reasons: list[str] | None = None) -> dict:
+        """Build the response dict with question + context + selection insights."""
         concept = self.db.query(Concept).filter(Concept.id == concept_id).first()
         topic = self.db.query(Topic).filter(Topic.id == concept.topic_id).first() if concept else None
 
@@ -491,10 +508,14 @@ class QuestionSelector:
                     "expires_in_seconds": remaining_sec,
                 })
 
+        # Pick the most relevant reason (first one)
+        selection_reason = (reasons[0] if reasons else "Adaptive selection based on your learning profile")
+
         return {
             "question": question,
             "concept_id": concept_id,
             "concept_name": concept.name if concept else "",
             "topic_name": topic.name if topic else "",
             "cooldown_questions": cooldowns,
+            "selection_reason": selection_reason,
         }

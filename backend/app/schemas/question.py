@@ -57,6 +57,7 @@ class LearningSession(BaseModel):
     session_stats: "SessionStats"
     concept_progress: "ConceptProgressBrief"
     cooldown_questions: list[CooldownItem] = []
+    selection_reason: str = ""  # why the algorithm chose this question
 
 
 class SessionStats(BaseModel):
