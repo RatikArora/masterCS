@@ -28,10 +28,16 @@ export interface ConceptProgressBrief {
   exposure_count: number;
 }
 
+export interface CooldownItem {
+  question_id: string;
+  expires_in_seconds: number;
+}
+
 export interface LearningSession {
   question: QuestionResponse;
   session_stats: SessionStats;
   concept_progress: ConceptProgressBrief;
+  cooldown_questions: CooldownItem[];
 }
 
 export interface LessonCard {
@@ -53,6 +59,7 @@ export interface AnswerResult {
   level_up: boolean;
   new_badges: string[];
   lesson_card: LessonCard | null;
+  cooldown_seconds: number | null;
 }
 
 export interface WrongQuestionItem {

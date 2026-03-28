@@ -152,7 +152,8 @@ class MasteryTracker:
         # Commit
         self.db.commit()
 
-        # Build review message
+        # Build review message + cooldown for wrong answers
+        cooldown_seconds = None
         if is_correct:
             days = sr_result["interval_days"]
             if days == 0:
@@ -162,7 +163,20 @@ class MasteryTracker:
             else:
                 review_msg = f"Next review in {days} days."
         else:
-            review_msg = "Let's try a similar question to reinforce this."
+            # Calculate cooldown for this wrong question
+            wrong_count = progress.error_streak
+            cooldown_min = min(
+                5 * (1.5 ** (wrong_count - 1)),  # 5, 7.5, 11, 17, 25... minutes
+                120  # cap at 2 hours
+            )
+            cooldown_seconds = int(cooldown_min * 60)
+            mins = int(cooldown_min)
+            if mins < 1:
+                review_msg = "This question will respawn in a few seconds."
+            elif mins == 1:
+                review_msg = "This question will respawn in 1 minute."
+            else:
+                review_msg = f"This question will respawn in {mins} minutes."
 
         return {
             "is_correct": is_correct,
@@ -176,6 +190,7 @@ class MasteryTracker:
             "level_up": level_up,
             "new_badges": [],
             "lesson_card": lesson_card,
+            "cooldown_seconds": cooldown_seconds,
         }
 
     def _get_or_create_progress(self, concept_id: str) -> UserConceptProgress:

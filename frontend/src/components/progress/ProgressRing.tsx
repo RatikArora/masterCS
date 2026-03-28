@@ -8,7 +8,7 @@ interface ProgressRingProps {
 }
 
 export default function ProgressRing({
-  percent, size = 80, strokeWidth = 6, color = '#3b82f6', bgColor = '#e5e7eb', children,
+  percent, size = 80, strokeWidth = 5, color = '#4f46e5', bgColor = '#f1f5f9', children,
 }: ProgressRingProps) {
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
@@ -26,7 +26,7 @@ export default function ProgressRing({
         />
       </svg>
       <div className="absolute inset-0 flex items-center justify-center">
-        {children ?? <span className="text-sm font-semibold text-gray-700">{Math.round(percent)}%</span>}
+        {children ?? <span className="text-sm font-semibold text-slate-700">{Math.round(percent)}%</span>}
       </div>
     </div>
   );

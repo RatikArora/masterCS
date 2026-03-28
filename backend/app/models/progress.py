@@ -57,6 +57,7 @@ class UserQuestionAttempt(Base):
         Index("ix_uqa_user_time", "user_id", "attempted_at"),
         Index("ix_uqa_user_question", "user_id", "question_id"),
         Index("ix_uqa_user_correct", "user_id", "is_correct"),
+        Index("ix_uqa_user_correct_concept", "user_id", "is_correct", "concept_id"),
     )
 
 

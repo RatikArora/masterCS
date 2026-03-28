@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { Globe, Building2, ChevronRight, Zap, AlertTriangle, ArrowRight } from 'lucide-react';
 import { conceptsApi, type SubjectResponse } from '../api/concepts';
 import { progressApi, type StreakInfo, type WeakArea } from '../api/progress';
 import { badgesApi, type LevelInfo } from '../api/badges';
@@ -69,8 +70,8 @@ export default function Dashboard() {
     return (
       <PageContainer>
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="py-8">
-          <h1 className="text-xl font-bold text-slate-900 mb-1.5">Welcome to MasterCS!</h1>
-          <p className="text-slate-500 text-sm mb-6">Select your degree to see relevant subjects.</p>
+          <h1 className="text-xl font-semibold text-slate-900 mb-1">Welcome to MasterCS</h1>
+          <p className="text-slate-500 text-sm mb-8">Select your degree to see relevant subjects.</p>
           <div className="space-y-2.5">
             {DEGREE_OPTIONS.map((opt) => (
               <button
@@ -78,12 +79,12 @@ export default function Dashboard() {
                 onClick={() => handleDegreePick(opt.value)}
                 className="w-full text-left p-4 bg-white rounded-2xl border border-slate-200/60 hover:border-indigo-300 hover:shadow-sm transition-all duration-200 group"
               >
-                <p className="font-semibold text-sm text-slate-900 group-hover:text-indigo-600">{opt.label}</p>
+                <p className="font-semibold text-sm text-slate-900 group-hover:text-indigo-600 transition-colors">{opt.label}</p>
                 <p className="text-xs text-slate-400 mt-0.5">{opt.desc}</p>
               </button>
             ))}
           </div>
-          <p className="text-[10px] text-slate-400 text-center mt-4">You can change this later in settings.</p>
+          <p className="text-[10px] text-slate-400 text-center mt-6">You can change this later in settings.</p>
         </motion.div>
       </PageContainer>
     );
@@ -93,28 +94,27 @@ export default function Dashboard() {
 
   return (
     <PageContainer>
-      <div className="space-y-5">
+      <div className="space-y-6">
         {/* Greeting */}
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}>
-          <h1 className="text-xl font-bold text-slate-900">
+          <h1 className="text-xl font-semibold text-slate-900">
             Hey, {user?.display_name || user?.username}
           </h1>
           <p className="text-slate-500 text-sm mt-0.5">Ready to learn something new?</p>
         </motion.div>
 
-        {/* Stats Row — compact pills + XP bar */}
+        {/* Stats pills + XP bar */}
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.05, duration: 0.2 }}
+          className="space-y-3"
         >
-          <div className="flex items-center gap-2 mb-2.5">
+          <div className="flex items-center gap-2">
             <StreakCounter count={streak?.current_streak || 0} isActive={streak?.today_completed} />
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold bg-indigo-50 text-indigo-600 border border-indigo-200/60">
-              <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z"/>
-              </svg>
-              <span>{(user?.total_xp || 0).toLocaleString()} XP</span>
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-indigo-50 text-indigo-600 border border-indigo-100">
+              <Zap size={12} strokeWidth={1.5} />
+              <span className="tabular-nums">{(user?.total_xp || 0).toLocaleString()} XP</span>
             </div>
           </div>
           {streak && (
@@ -130,8 +130,8 @@ export default function Dashboard() {
             transition={{ delay: 0.1, duration: 0.2 }}
           >
             <Link to="/badges" className="block">
-              <div className="flex items-center gap-3 bg-white border border-slate-200/60 rounded-2xl px-4 py-3 hover:shadow-md hover:border-slate-300/60 transition-all duration-200">
-                <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-sm">
+              <div className="flex items-center gap-3 bg-white border border-slate-200/60 rounded-2xl px-4 py-3 hover:shadow-sm hover:border-slate-300 transition-all duration-200">
+                <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-sm shadow-indigo-500/20">
                   {level.level}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -146,9 +146,7 @@ export default function Dashboard() {
                     <span className="text-[10px] text-slate-400 tabular-nums">{level.current_xp}/{level.xp_for_next}</span>
                   </div>
                 </div>
-                <svg className="w-4 h-4 text-slate-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
-                </svg>
+                <ChevronRight size={16} strokeWidth={1.5} className="text-slate-300 flex-shrink-0" />
               </div>
             </Link>
           </motion.div>
@@ -156,10 +154,10 @@ export default function Dashboard() {
 
         {/* Subjects */}
         <div>
-          <h2 className="text-base font-semibold text-slate-800 mb-3">Your Subjects</h2>
+          <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3">Your Subjects</h2>
           {subjects.length === 0 && (
             <Card padding="lg">
-              <p className="text-slate-500 text-sm text-center">No subjects available yet. Seed the database first!</p>
+              <p className="text-slate-400 text-sm text-center">No subjects available yet. Seed the database first!</p>
             </Card>
           )}
           <div className="space-y-2.5">
@@ -170,22 +168,18 @@ export default function Dashboard() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 + i * 0.04, duration: 0.2 }}
               >
-                <Card hover className="cursor-pointer" onClick={() => navigate(`/topics?subject=${subject.id}`)}>
+                <Card hover onClick={() => navigate(`/topics?subject=${subject.id}`)}>
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center flex-shrink-0">
                       {subject.name.toLowerCase().includes('architecture') ? (
-                        <svg className="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                        </svg>
+                        <Building2 size={18} strokeWidth={1.5} className="text-indigo-500" />
                       ) : (
-                        <svg className="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
-                        </svg>
+                        <Globe size={18} strokeWidth={1.5} className="text-indigo-500" />
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="text-sm font-semibold text-slate-900">{subject.name}</h3>
-                      <p className="text-xs text-slate-500 truncate">{subject.description}</p>
+                      <p className="text-xs text-slate-400 truncate mt-0.5">{subject.description}</p>
                       <div className="flex items-center gap-2 mt-2">
                         <div className="flex-1 bg-slate-100 rounded-full h-1.5 overflow-hidden">
                           <motion.div
@@ -203,13 +197,11 @@ export default function Dashboard() {
                           onClick={(e) => { e.stopPropagation(); navigate(`/progress?subject=${subject.id}`); }}
                           className="text-[10px] text-indigo-500 hover:text-indigo-700 font-medium transition-colors ml-auto"
                         >
-                          Stats →
+                          View Stats
                         </button>
                       </div>
                     </div>
-                    <svg className="w-4 h-4 text-slate-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
-                    </svg>
+                    <ChevronRight size={16} strokeWidth={1.5} className="text-slate-300 flex-shrink-0" />
                   </div>
                 </Card>
               </motion.div>
@@ -224,21 +216,23 @@ export default function Dashboard() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15, duration: 0.2 }}
           >
-            <h2 className="text-base font-semibold text-slate-800 mb-3">Needs Practice</h2>
+            <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3">Needs Practice</h2>
             <div className="space-y-2">
               {weakAreas.map((area) => (
-                <div key={area.concept_id} className="flex items-center gap-3 px-4 py-3 bg-white rounded-2xl border border-slate-200/60">
-                  <div className="w-8 h-8 bg-indigo-50 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <svg className="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                    </svg>
+                <button
+                  key={area.concept_id}
+                  onClick={() => navigate(`/learn?subject=${subjects[0]?.id}&concept=${area.concept_id}`)}
+                  className="w-full flex items-center gap-3 px-4 py-3 bg-white rounded-2xl border border-slate-200/60 hover:border-indigo-200 hover:shadow-sm transition-all duration-200 text-left"
+                >
+                  <div className="w-8 h-8 bg-amber-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <AlertTriangle size={14} strokeWidth={1.5} className="text-amber-500" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-slate-800 truncate">{area.concept_name}</p>
                     <p className="text-[11px] text-slate-400">{area.topic_name} · {Math.round(area.accuracy)}% accuracy</p>
                   </div>
                   <span className="text-[10px] text-indigo-500 font-medium flex-shrink-0">{area.recommended_action}</span>
-                </div>
+                </button>
               ))}
             </div>
           </motion.div>
@@ -263,9 +257,10 @@ export default function Dashboard() {
           >
             <Link
               to={`/learn?subject=${subjects[0].id}`}
-              className="block w-full py-3 bg-indigo-600 text-white text-center text-sm font-medium rounded-2xl hover:bg-indigo-700 transition-colors duration-200 shadow-sm"
+              className="flex items-center justify-center gap-2 w-full py-3 bg-indigo-600 text-white text-center text-sm font-medium rounded-2xl hover:bg-indigo-700 transition-all duration-200 shadow-sm shadow-indigo-600/10"
             >
-              Start Learning →
+              Start Learning
+              <ArrowRight size={16} strokeWidth={1.5} />
             </Link>
           </motion.div>
         )}

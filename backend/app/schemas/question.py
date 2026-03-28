@@ -36,6 +36,7 @@ class AnswerResult(BaseModel):
     level_up: bool = False
     new_badges: list[str] = []  # badge names just earned
     lesson_card: "LessonCard | None" = None
+    cooldown_seconds: int | None = None  # seconds until this wrong Q respawns
 
 
 class LessonCard(BaseModel):
@@ -46,10 +47,16 @@ class LessonCard(BaseModel):
     type: str  # "intro" | "review" | "mistake_fix"
 
 
+class CooldownItem(BaseModel):
+    question_id: str
+    expires_in_seconds: int
+
+
 class LearningSession(BaseModel):
     question: QuestionResponse
     session_stats: "SessionStats"
     concept_progress: "ConceptProgressBrief"
+    cooldown_questions: list[CooldownItem] = []
 
 
 class SessionStats(BaseModel):

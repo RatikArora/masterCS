@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { ClipboardList, Target, Flame, Zap, Timer, BookOpen, ChevronRight, Check } from 'lucide-react';
 import { progressApi, type OverallProgress, type TopicProgress, type WeakArea, type DailyStats } from '../api/progress';
 import { conceptsApi, type SubjectResponse } from '../api/concepts';
 import { learningApi, type WrongQuestionItem } from '../api/learning';
@@ -100,10 +101,10 @@ function WeeklyHeatmap({ data }: { data: DailyStats[] }) {
   const intensity = (n: number) => {
     if (n === 0) return 'bg-slate-100';
     const ratio = n / maxQ;
-    if (ratio <= 0.25) return 'bg-green-200';
-    if (ratio <= 0.5) return 'bg-green-300';
-    if (ratio <= 0.75) return 'bg-green-500';
-    return 'bg-green-600';
+    if (ratio <= 0.25) return 'bg-emerald-200';
+    if (ratio <= 0.5) return 'bg-emerald-300';
+    if (ratio <= 0.75) return 'bg-emerald-500';
+    return 'bg-emerald-600';
   };
 
   return (
@@ -124,7 +125,7 @@ function WeeklyHeatmap({ data }: { data: DailyStats[] }) {
               title={`${d.date}: ${d.questions_answered} questions`}
             >
               {d.questions_answered > 0 && (
-                <span className={`text-[10px] font-semibold ${d.questions_answered / maxQ > 0.5 ? 'text-white' : 'text-green-800'}`}>
+                <span className={`text-[10px] font-semibold ${d.questions_answered / maxQ > 0.5 ? 'text-white' : 'text-emerald-800'}`}>
                   {d.questions_answered}
                 </span>
               )}
@@ -352,12 +353,12 @@ export default function ProgressPage() {
       </motion.div>
 
       {/* Tab Switcher */}
-      <div className="flex gap-1 bg-slate-100 rounded-xl p-1 mb-6">
+      <div className="flex gap-1 bg-slate-100 rounded-lg p-1 mb-6">
         {(['overview', 'topics', 'analytics', 'mistakes'] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`flex-1 py-2 text-sm font-medium rounded-xl transition-all ${
+            className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
               activeTab === tab
                 ? 'bg-white text-slate-900 shadow-sm'
                 : 'text-slate-500 hover:text-slate-700'
@@ -374,12 +375,12 @@ export default function ProgressPage() {
           {/* Stats Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
             {[
-              { label: 'Total Questions', value: totalAnswered.toLocaleString(), sub: 'answered', color: 'text-indigo-600', icon: '📝' },
-              { label: 'Accuracy', value: `${Math.round(overview.overall_accuracy)}%`, sub: `${totalAnswered > 0 ? Math.round((overview.overall_accuracy / 100) * totalAnswered) : 0} correct`, color: 'text-emerald-600', icon: '🎯' },
-              { label: 'Best Streak', value: overview.longest_streak, sub: `current: ${overview.current_streak}`, color: 'text-orange-600', icon: '🔥' },
-              { label: 'Total XP', value: overview.total_xp.toLocaleString(), sub: 'earned', color: 'text-amber-600', icon: '⭐' },
-              { label: 'Avg Speed', value: avgSpeedSeconds > 0 ? `${avgSpeedSeconds}s` : '—', sub: 'per question', color: 'text-purple-600', icon: '⚡' },
-              { label: 'Subjects', value: subjectsCovered || allSubjects.length, sub: 'covered', color: 'text-cyan-600', icon: '📚' },
+              { label: 'Total Questions', value: totalAnswered.toLocaleString(), sub: 'answered', color: 'text-indigo-600', icon: <ClipboardList size={18} strokeWidth={1.5} /> },
+              { label: 'Accuracy', value: `${Math.round(overview.overall_accuracy)}%`, sub: `${totalAnswered > 0 ? Math.round((overview.overall_accuracy / 100) * totalAnswered) : 0} correct`, color: 'text-emerald-600', icon: <Target size={18} strokeWidth={1.5} /> },
+              { label: 'Best Streak', value: overview.longest_streak, sub: `current: ${overview.current_streak}`, color: 'text-orange-600', icon: <Flame size={18} strokeWidth={1.5} /> },
+              { label: 'Total XP', value: overview.total_xp.toLocaleString(), sub: 'earned', color: 'text-amber-600', icon: <Zap size={18} strokeWidth={1.5} /> },
+              { label: 'Avg Speed', value: avgSpeedSeconds > 0 ? `${avgSpeedSeconds}s` : '—', sub: 'per question', color: 'text-purple-600', icon: <Timer size={18} strokeWidth={1.5} /> },
+              { label: 'Subjects', value: subjectsCovered || allSubjects.length, sub: 'covered', color: 'text-cyan-600', icon: <BookOpen size={18} strokeWidth={1.5} /> },
             ].map((stat, i) => (
               <motion.div
                 key={stat.label}
@@ -388,7 +389,7 @@ export default function ProgressPage() {
                 transition={{ delay: i * 0.05 }}
               >
                 <Card padding="sm" className="text-center">
-                  <p className="text-xs text-slate-400 mb-1">{stat.icon} {stat.label}</p>
+                  <p className="text-xs text-slate-400 mb-1 flex items-center justify-center gap-1">{stat.icon} {stat.label}</p>
                   <p className={`text-xl font-bold ${stat.color}`}>{stat.value}</p>
                   <p className="text-[10px] text-slate-400">{stat.sub}</p>
                 </Card>
@@ -446,9 +447,9 @@ export default function ProgressPage() {
                 <div className="flex items-center gap-1 text-[9px] text-slate-400">
                   <span>Less</span>
                   <span className="w-3 h-3 rounded bg-slate-100" />
-                  <span className="w-3 h-3 rounded bg-green-200" />
-                  <span className="w-3 h-3 rounded bg-green-400" />
-                  <span className="w-3 h-3 rounded bg-green-600" />
+                  <span className="w-3 h-3 rounded bg-emerald-200" />
+                  <span className="w-3 h-3 rounded bg-emerald-400" />
+                  <span className="w-3 h-3 rounded bg-emerald-600" />
                   <span>More</span>
                 </div>
               </div>
@@ -464,7 +465,7 @@ export default function ProgressPage() {
               <p className="text-[9px] text-slate-300 mt-0.5">Best: {overview.longest_streak}</p>
             </Card>
             <Card padding="sm" className="text-center">
-              <p className="text-xl font-bold text-green-500">
+              <p className="text-xl font-bold text-emerald-500">
                 {totalAnswered > 0 ? Math.round(overview.overall_accuracy) : 0}%
               </p>
               <p className="text-[10px] text-slate-400">Overall Accuracy</p>
@@ -495,7 +496,7 @@ export default function ProgressPage() {
                           animate={{ width: `${pct}%` }}
                           transition={{ duration: 0.6, ease: 'easeOut' }}
                           className={`h-full rounded-full ${
-                            pct >= 80 ? 'bg-green-400' : pct >= 50 ? 'bg-amber-400' : pct >= 20 ? 'bg-blue-400' : 'bg-gray-300'
+                            pct >= 80 ? 'bg-emerald-400' : pct >= 50 ? 'bg-amber-400' : pct >= 20 ? 'bg-indigo-400' : 'bg-slate-300'
                           }`}
                         />
                       </div>
@@ -518,7 +519,7 @@ export default function ProgressPage() {
                   <Card
                     key={w.concept_id}
                     padding="sm"
-                    className="cursor-pointer hover:border-primary-200 transition-colors"
+                    className="cursor-pointer hover:border-indigo-200 transition-all duration-200"
                     onClick={() => navigate(`/learn?subject=${subjectId}&concept=${w.concept_id}`)}
                   >
                     <div className="flex items-center justify-between">
@@ -528,9 +529,7 @@ export default function ProgressPage() {
                       </div>
                       <div className="flex items-center gap-2">
                         <MasteryBadge level="learning" size="xs" />
-                        <svg className="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
-                        </svg>
+                        <ChevronRight size={16} strokeWidth={1.5} className="text-slate-300" />
                       </div>
                     </div>
                     <p className="text-xs text-orange-600 mt-1">{w.recommended_action}</p>
@@ -543,7 +542,7 @@ export default function ProgressPage() {
           {subjectId && (
             <Link
               to={`/learn?subject=${subjectId}`}
-              className="block w-full py-3 bg-primary-600 text-white text-center font-semibold rounded-xl hover:bg-indigo-700 transition-colors text-sm"
+              className="block w-full py-3 bg-indigo-600 text-white text-center font-semibold rounded-xl hover:bg-indigo-700 transition-all duration-200 text-sm"
             >
               Continue Learning →
             </Link>
@@ -620,7 +619,7 @@ export default function ProgressPage() {
               >
                 <Card
                   padding="sm"
-                  className="cursor-pointer hover:border-primary-200 transition-colors"
+                  className="cursor-pointer hover:border-indigo-200 transition-all duration-200"
                   onClick={() => navigate(`/topics?subject=${subjectId}`)}
                 >
                   <div className="flex items-center gap-3">
@@ -638,9 +637,7 @@ export default function ProgressPage() {
                         </span>
                       </div>
                     </div>
-                    <svg className="w-4 h-4 text-slate-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
-                    </svg>
+                    <ChevronRight size={16} strokeWidth={1.5} className="text-slate-300 flex-shrink-0" />
                   </div>
                 </Card>
               </motion.div>
@@ -654,10 +651,8 @@ export default function ProgressPage() {
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
           {wrongQuestions.length === 0 ? (
             <div className="text-center py-12">
-              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 13l4 4L19 7" />
-                </svg>
+              <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Check size={24} strokeWidth={1.5} className="text-emerald-600" />
               </div>
               <p className="text-slate-500 text-sm">No wrong answers yet. Keep learning!</p>
             </div>
@@ -687,12 +682,12 @@ export default function ProgressPage() {
                     <div className="text-sm text-slate-800 mb-2 leading-relaxed"><RichText content={wq.question_text} /></div>
                     <div className="grid grid-cols-2 gap-2 text-xs">
                       <div className="bg-rose-50 rounded-xl px-2.5 py-1.5">
-                        <p className="text-[10px] text-red-400 mb-0.5">Your answer</p>
-                        <p className="text-red-700 font-medium">{wq.selected_answer}</p>
+                        <p className="text-[10px] text-rose-400 mb-0.5">Your answer</p>
+                        <p className="text-rose-700 font-medium">{wq.selected_answer}</p>
                       </div>
-                      <div className="bg-green-50 rounded-xl px-2.5 py-1.5">
-                        <p className="text-[10px] text-green-400 mb-0.5">Correct answer</p>
-                        <p className="text-green-700 font-medium">{wq.correct_answer}</p>
+                      <div className="bg-emerald-50 rounded-xl px-2.5 py-1.5">
+                        <p className="text-[10px] text-emerald-400 mb-0.5">Correct answer</p>
+                        <p className="text-emerald-700 font-medium">{wq.correct_answer}</p>
                       </div>
                     </div>
                     {wq.explanation && (

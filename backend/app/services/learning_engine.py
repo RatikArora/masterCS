@@ -105,6 +105,7 @@ class LearningEngine:
             question=question_resp,
             session_stats=session_stats,
             concept_progress=concept_brief,
+            cooldown_questions=result.get("cooldown_questions", []),
         )
 
     def submit_answer(self, answer: AnswerSubmit) -> AnswerResult:
@@ -119,7 +120,9 @@ class LearningEngine:
             .filter(QuestionConcept.question_id == question.id)
             .first()
         )
-        concept_id = qc.concept_id if qc else None
+        if not qc:
+            raise ValueError("Question has invalid data — missing concept mapping. Please report this question.")
+        concept_id = qc.concept_id
 
         is_correct = answer.selected_answer.strip().lower() == question.correct_answer.strip().lower()
 

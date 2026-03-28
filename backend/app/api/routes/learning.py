@@ -69,6 +69,18 @@ def get_wrong_questions(
         .subquery()
     )
 
+    # Subquery: questions the user has since answered correctly (exclude from wrong list)
+    correctly_answered = (
+        db.query(UserQuestionAttempt.question_id)
+        .filter(
+            UserQuestionAttempt.user_id == user.id,
+            UserQuestionAttempt.is_correct == True,
+            UserQuestionAttempt.concept_id.in_(subject_concept_ids.select()),
+        )
+        .distinct()
+        .subquery()
+    )
+
     # Get distinct wrong question IDs with latest attempt info
     wrong_attempts = (
         db.query(
@@ -81,6 +93,7 @@ def get_wrong_questions(
             UserQuestionAttempt.user_id == user.id,
             UserQuestionAttempt.is_correct == False,
             UserQuestionAttempt.concept_id.in_(subject_concept_ids.select()),
+            UserQuestionAttempt.question_id.notin_(correctly_answered.select()),
         )
         .group_by(UserQuestionAttempt.question_id)
         .order_by(func.max(UserQuestionAttempt.attempted_at).desc())
