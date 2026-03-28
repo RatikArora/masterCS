@@ -1,0 +1,85 @@
+import api from './client';
+
+export interface QuestionResponse {
+  id: string;
+  question_text: string;
+  question_type: string;
+  options: string[] | null;
+  difficulty: number;
+  concept_id: string;
+  concept_name: string;
+  topic_name: string;
+  time_estimate_seconds: number;
+  attempt_number: number;
+}
+
+export interface SessionStats {
+  questions_answered_today: number;
+  correct_today: number;
+  current_streak: number;
+  xp_today: number;
+}
+
+export interface ConceptProgressBrief {
+  concept_id: string;
+  concept_name: string;
+  mastery_level: string;
+  confidence_score: number;
+  exposure_count: number;
+}
+
+export interface LearningSession {
+  question: QuestionResponse;
+  session_stats: SessionStats;
+  concept_progress: ConceptProgressBrief;
+}
+
+export interface AnswerResult {
+  is_correct: boolean;
+  correct_answer: string;
+  explanation: string | null;
+  xp_earned: number;
+  confidence_change: number;
+  mastery_level: string;
+  streak_count: number;
+  next_review_message: string;
+}
+
+export interface WrongQuestionItem {
+  question_id: string;
+  question_text: string;
+  correct_answer: string;
+  selected_answer: string;
+  explanation: string | null;
+  concept_name: string;
+  topic_name: string;
+  difficulty: number;
+  attempt_count: number;
+  last_attempted: string;
+}
+
+export interface ConceptNotes {
+  id: string;
+  name: string;
+  topic_name: string;
+  explanation: string;
+  key_points: string[];
+}
+
+export const learningApi = {
+  getNextQuestion: (subjectId: string, conceptId?: string) => {
+    const params = conceptId ? `?concept_id=${conceptId}` : '';
+    return api.get<LearningSession>(`/learn/next-question/${subjectId}${params}`);
+  },
+
+  submitAnswer: (data: { question_id: string; selected_answer: string; response_time_ms: number }) =>
+    api.post<AnswerResult>('/learn/submit-answer', data),
+
+  getWrongQuestions: (subjectId: string, page = 1, pageSize = 20) =>
+    api.get<{ items: WrongQuestionItem[]; total: number; page: number; total_pages: number; has_next: boolean }>(
+      `/learn/wrong-questions/${subjectId}?page=${page}&page_size=${pageSize}`
+    ),
+
+  getConceptNotes: (conceptId: string) =>
+    api.get<ConceptNotes>(`/learn/concept-notes/${conceptId}`),
+};
