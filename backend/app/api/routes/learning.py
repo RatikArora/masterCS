@@ -91,18 +91,26 @@ def get_wrong_questions(
     rows = wrong_attempts.offset(pagination.offset).limit(pagination.page_size).all()
 
     items = []
+    # Batch-fetch question + concept + topic data in one query
+    qids = [row[0] for row in rows]
+    if qids:
+        q_data = (
+            db.query(Question, Concept.id, Concept.name, Topic.name)
+            .join(QuestionConcept, QuestionConcept.question_id == Question.id)
+            .join(Concept, Concept.id == QuestionConcept.concept_id)
+            .join(Topic, Topic.id == Concept.topic_id)
+            .filter(Question.id.in_(qids))
+            .all()
+        )
+        q_map = {q.id: (q, cid, cn, tn) for q, cid, cn, tn in q_data}
+    else:
+        q_map = {}
+
     for qid, attempt_count, last_attempted, last_answer in rows:
-        q = db.query(Question).filter(Question.id == qid).first()
-        if not q:
+        entry = q_map.get(qid)
+        if not entry:
             continue
-        qc = db.query(QuestionConcept).filter(QuestionConcept.question_id == qid).first()
-        concept_name, topic_name = "", ""
-        if qc:
-            concept = db.query(Concept).filter(Concept.id == qc.concept_id).first()
-            if concept:
-                concept_name = concept.name
-                topic = db.query(Topic).filter(Topic.id == concept.topic_id).first()
-                topic_name = topic.name if topic else ""
+        q, concept_id, concept_name, topic_name = entry
 
         items.append(WrongQuestionItem(
             question_id=qid,
@@ -110,6 +118,7 @@ def get_wrong_questions(
             correct_answer=q.correct_answer,
             selected_answer=last_answer or "",
             explanation=q.explanation,
+            concept_id=concept_id,
             concept_name=concept_name,
             topic_name=topic_name,
             difficulty=q.difficulty,

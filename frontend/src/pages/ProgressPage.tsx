@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { progressApi, type OverallProgress, type TopicProgress, type WeakArea } from '../api/progress';
-import { conceptsApi, type SubjectResponse } from '../api/concepts';
+import { conceptsApi } from '../api/concepts';
 import { learningApi, type WrongQuestionItem } from '../api/learning';
 import PageContainer from '../components/layout/PageContainer';
 import Card from '../components/ui/Card';
@@ -20,6 +20,7 @@ const difficultyColors: Record<number, string> = { 1: 'text-green-600', 2: 'text
 
 export default function ProgressPage() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   let subjectId = searchParams.get('subject') || '';
   const [overview, setOverview] = useState<OverallProgress | null>(null);
   const [topics, setTopics] = useState<TopicProgress[]>([]);
@@ -47,10 +48,10 @@ export default function ProgressPage() {
   const loadData = (sid: string) => {
     setLoading(true);
     Promise.all([
-      progressApi.getOverview(sid).then((r) => setOverview(r.data)),
-      progressApi.getTopicProgress(sid).then((r) => setTopics(r.data)),
-      progressApi.getWeakAreas(sid).then((r) => setWeakAreas(r.data)),
-      learningApi.getWrongQuestions(sid, 1, 20).then((r) => setWrongQuestions(r.data.items)),
+      progressApi.getOverview(sid).then((r) => setOverview(r.data)).catch((e) => console.error('Overview load failed:', e)),
+      progressApi.getTopicProgress(sid).then((r) => setTopics(r.data)).catch((e) => console.error('Topics load failed:', e)),
+      progressApi.getWeakAreas(sid).then((r) => setWeakAreas(r.data)).catch((e) => console.error('Weak areas load failed:', e)),
+      learningApi.getWrongQuestions(sid, 1, 20).then((r) => setWrongQuestions(r.data.items)).catch((e) => console.error('Wrong questions load failed:', e)),
     ]).finally(() => setLoading(false));
   };
 
@@ -145,13 +146,23 @@ export default function ProgressPage() {
               <h3 className="text-sm font-semibold text-gray-700 mb-3">Areas to Improve</h3>
               <div className="space-y-2 mb-6">
                 {weakAreas.map((w) => (
-                  <Card key={w.concept_id} padding="sm">
+                  <Card
+                    key={w.concept_id}
+                    padding="sm"
+                    className="cursor-pointer hover:border-primary-200 transition-colors"
+                    onClick={() => navigate(`/learn?subject=${subjectId}&concept=${w.concept_id}`)}
+                  >
                     <div className="flex items-center justify-between">
-                      <div>
+                      <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-gray-800">{w.concept_name}</p>
                         <p className="text-xs text-gray-400">{w.topic_name} · {w.accuracy}% accuracy</p>
                       </div>
-                      <MasteryBadge level="learning" size="xs" />
+                      <div className="flex items-center gap-2">
+                        <MasteryBadge level="learning" size="xs" />
+                        <svg className="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </div>
                     </div>
                     <p className="text-xs text-orange-600 mt-1">{w.recommended_action}</p>
                   </Card>
@@ -245,8 +256,16 @@ export default function ProgressPage() {
                       </div>
                     </div>
                     {wq.explanation && (
-                      <p className="text-xs text-gray-500 mt-2 leading-relaxed">{wq.explanation}</p>
+                      <div className="text-xs text-gray-500 mt-2 leading-relaxed">
+                        <RichText content={wq.explanation} />
+                      </div>
                     )}
+                    <button
+                      onClick={() => navigate(`/learn?subject=${subjectId}&concept=${wq.concept_id}`)}
+                      className="mt-2 w-full py-1.5 text-xs font-medium text-primary-600 bg-primary-50 rounded-lg hover:bg-primary-100 transition-colors"
+                    >
+                      Practice this concept →
+                    </button>
                   </Card>
                 </motion.div>
               ))}

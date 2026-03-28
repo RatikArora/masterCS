@@ -67,13 +67,22 @@ def get_overview(
     started = int(progress_stats[0] or 0)
     mastered = int(progress_stats[1] or 0)
 
-    # Attempt stats — single aggregation
+    # Attempt stats — scoped to this subject via concept_id join
+    subject_concept_ids = (
+        db.query(Concept.id)
+        .join(Topic, Concept.topic_id == Topic.id)
+        .filter(Topic.subject_id == subject_id)
+        .subquery()
+    )
     attempt_stats = (
         db.query(
             func.count(UserQuestionAttempt.id),
             func.sum(case((UserQuestionAttempt.is_correct == True, 1), else_=0)),
         )
-        .filter(UserQuestionAttempt.user_id == user.id)
+        .filter(
+            UserQuestionAttempt.user_id == user.id,
+            UserQuestionAttempt.concept_id.in_(subject_concept_ids.select()),
+        )
         .first()
     )
 
@@ -81,8 +90,10 @@ def get_overview(
     total_correct = int(attempt_stats[1] or 0)
     accuracy = (total_correct / total_answered * 100) if total_answered > 0 else 0.0
 
+    # Include both unstarted concepts and started-but-novice in novice count
+    novice_from_progress = int(progress_stats[2] or 0)
     distribution = {
-        "novice": total_concepts - started,
+        "novice": (total_concepts - started) + novice_from_progress,
         "learning": int(progress_stats[3] or 0),
         "familiar": int(progress_stats[4] or 0),
         "proficient": int(progress_stats[5] or 0),

@@ -51,6 +51,7 @@ export interface WrongQuestionItem {
   correct_answer: string;
   selected_answer: string;
   explanation: string | null;
+  concept_id: string;
   concept_name: string;
   topic_name: string;
   difficulty: number;

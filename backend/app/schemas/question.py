@@ -61,6 +61,7 @@ class WrongQuestionItem(BaseModel):
     correct_answer: str
     selected_answer: str
     explanation: str | None
+    concept_id: str
     concept_name: str
     topic_name: str
     difficulty: int
