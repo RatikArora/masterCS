@@ -46,6 +46,7 @@ def seed_architecture():
             name="Architecture & Planning",
             description="GATE AR syllabus — Architecture, Planning and Design, Construction Management, and more.",
             icon="🏛️", color="#8b5cf6", order_index=1,
+            target_degrees="B.Arch,M.Arch",
         ))
 
         # ─── Topics ───

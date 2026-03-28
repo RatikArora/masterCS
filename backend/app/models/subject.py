@@ -12,6 +12,7 @@ class Subject(Base):
     icon = Column(String(50), nullable=True)
     color = Column(String(7), nullable=True)
     order_index = Column(Integer, default=0)
+    target_degrees = Column(String(200), nullable=True)
     created_at = Column(DateTime, server_default=func.now())
 
     topics = relationship("Topic", back_populates="subject", lazy="selectin")

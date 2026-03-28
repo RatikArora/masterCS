@@ -42,7 +42,8 @@ def seed_database():
         subj_id = _id()
         db.add(Subject(id=subj_id, name="Computer Networks",
                         description="Complete networking course from basics to application layer — GATE CS level.",
-                        icon="🌐", color="#3b82f6", order_index=0))
+                        icon="🌐", color="#3b82f6", order_index=0,
+                        target_degrees="B.Tech,M.Tech,BCA,MCA,B.Sc,M.Sc"))
 
         # ─── Topics ───
         topics_data = [

@@ -11,20 +11,38 @@ import StreakCounter from '../components/progress/StreakCounter';
 import XPBar from '../components/progress/XPBar';
 import Loading from '../components/ui/Loading';
 
+const DEGREE_OPTIONS = [
+  { value: 'B.Tech', label: 'B.Tech (CS/IT)', desc: 'Computer Science, GATE CS prep' },
+  { value: 'B.Arch', label: 'B.Arch', desc: 'Architecture & Planning, GATE AR prep' },
+  { value: 'M.Tech', label: 'M.Tech', desc: 'Postgrad Engineering' },
+  { value: 'M.Arch', label: 'M.Arch', desc: 'Postgrad Architecture' },
+];
+
 export default function Dashboard() {
-  const { user } = useAuthStore();
+  const { user, updateProfile, refreshUser } = useAuthStore();
   const [subjects, setSubjects] = useState<SubjectResponse[]>([]);
   const [streak, setStreak] = useState<StreakInfo | null>(null);
   const [weakAreas, setWeakAreas] = useState<WeakArea[]>([]);
   const [loading, setLoading] = useState(true);
+  const [pickingDegree, setPickingDegree] = useState(false);
   const navigate = useNavigate();
 
-  useEffect(() => {
+  const loadData = () => {
+    setLoading(true);
     Promise.all([
       conceptsApi.getSubjects().then((r) => setSubjects(r.data)),
       progressApi.getStreak().then((r) => setStreak(r.data)),
     ]).finally(() => setLoading(false));
-  }, []);
+  };
+
+  useEffect(() => {
+    if (!user?.degree) {
+      setPickingDegree(true);
+      setLoading(false);
+    } else {
+      loadData();
+    }
+  }, [user?.degree]);
 
   // Fetch weak areas once we have subjects
   useEffect(() => {
@@ -34,6 +52,41 @@ export default function Dashboard() {
         .catch(() => {});
     }
   }, [subjects]);
+
+  const handleDegreePick = async (degree: string) => {
+    try {
+      await updateProfile({ degree });
+      await refreshUser();
+      setPickingDegree(false);
+      loadData();
+    } catch {
+      // silent
+    }
+  };
+
+  if (pickingDegree) {
+    return (
+      <PageContainer>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-md mx-auto py-8">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Welcome to MasterCS!</h1>
+          <p className="text-gray-500 text-sm mb-6">Select your degree to see relevant subjects and courses.</p>
+          <div className="space-y-3">
+            {DEGREE_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => handleDegreePick(opt.value)}
+                className="w-full text-left p-4 bg-white rounded-xl border-2 border-gray-100 hover:border-primary-400 hover:bg-primary-50 transition-all duration-200 group"
+              >
+                <p className="font-semibold text-gray-900 group-hover:text-primary-700">{opt.label}</p>
+                <p className="text-xs text-gray-400 mt-0.5">{opt.desc}</p>
+              </button>
+            ))}
+          </div>
+          <p className="text-[10px] text-gray-400 text-center mt-4">You can change this later in your profile settings.</p>
+        </motion.div>
+      </PageContainer>
+    );
+  }
 
   if (loading) return <Loading text="Loading dashboard..." />;
 
@@ -135,7 +188,7 @@ export default function Dashboard() {
                 </svg>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-800 truncate">{area.concept_name}</p>
-                  <p className="text-[11px] text-gray-500">{area.topic_name} · {Math.round(area.accuracy * 100)}% accuracy</p>
+                  <p className="text-[11px] text-gray-500">{area.topic_name} · {Math.round(area.accuracy)}% accuracy</p>
                 </div>
                 <span className="text-[10px] text-amber-600 font-medium">{area.recommended_action}</span>
               </div>

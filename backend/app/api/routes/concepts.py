@@ -21,7 +21,17 @@ def list_subjects(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    """List all subjects with topic count and progress — single query with aggregation."""
+    """List subjects filtered by user's degree — single query with aggregation."""
+    # Filter subjects by user's degree if they have one set
+    base_query = db.query(Subject)
+    if user.degree:
+        # Filter to subjects whose target_degrees contains the user's degree
+        base_query = base_query.filter(
+            Subject.target_degrees.like(f"%{user.degree}%")
+        )
+
+    subject_ids = [s.id for s in base_query.all()]
+
     # Subquery: count topics per subject
     topic_counts = (
         db.query(Topic.subject_id, func.count(Topic.id).label("cnt"))
@@ -66,6 +76,7 @@ def list_subjects(
             func.coalesce(progress_scores.c.weighted_score, 0).label("weighted"),
             func.coalesce(concept_counts.c.total, 0).label("total_concepts"),
         )
+        .filter(Subject.id.in_(subject_ids))
         .outerjoin(topic_counts, Subject.id == topic_counts.c.subject_id)
         .outerjoin(progress_scores, Subject.id == progress_scores.c.subject_id)
         .outerjoin(concept_counts, Subject.id == concept_counts.c.subject_id)
@@ -91,6 +102,7 @@ def list_topics(
     user: User = Depends(get_current_user),
 ):
     """List topics with concept count and mastery — two queries max, no N+1."""
+    from app.models.question import Question
     topics = (
         db.query(Topic)
         .filter(Topic.subject_id == subject_id)
@@ -125,11 +137,25 @@ def list_topics(
 
     stats_map = {s[0]: s for s in stats}
 
+    # Question count per topic
+    q_counts = (
+        db.query(
+            Concept.topic_id,
+            func.count(QuestionConcept.question_id).label("q_count"),
+        )
+        .join(QuestionConcept, QuestionConcept.concept_id == Concept.id)
+        .filter(Concept.topic_id.in_(topic_ids))
+        .group_by(Concept.topic_id)
+        .all()
+    )
+    q_map = {tid: cnt for tid, cnt in q_counts}
+
     return [
         TopicResponse(
             id=t.id, subject_id=t.subject_id, name=t.name,
             description=t.description, icon=t.icon, order_index=t.order_index,
             concept_count=int(stats_map[t.id][1]) if t.id in stats_map else 0,
+            question_count=q_map.get(t.id, 0),
             mastery_percent=round(
                 (int(stats_map[t.id][3] or 0) / int(stats_map[t.id][1])) * 100, 1
             ) if t.id in stats_map and int(stats_map[t.id][1]) > 0 else 0.0,

@@ -1,4 +1,4 @@
-import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 
 const HomeIcon = () => (
@@ -25,11 +25,18 @@ const TopicsIcon = () => (
   </svg>
 );
 
+const ProfileIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+  </svg>
+);
+
 const icons: Record<string, () => JSX.Element> = {
   '/dashboard': HomeIcon,
   '/topics': TopicsIcon,
   '/learn': LearnIcon,
   '/progress': ProgressIcon,
+  '/profile': ProfileIcon,
 };
 
 const navItems = [
@@ -37,12 +44,12 @@ const navItems = [
   { path: '/topics', label: 'Topics' },
   { path: '/learn', label: 'Learn' },
   { path: '/progress', label: 'Progress' },
+  { path: '/profile', label: 'Profile' },
 ];
 
 export default function Navbar() {
-  const { isAuthenticated, user, logout } = useAuthStore();
+  const { isAuthenticated, user } = useAuthStore();
   const location = useLocation();
-  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
   if (!isAuthenticated) return null;
@@ -82,13 +89,19 @@ export default function Navbar() {
           ))}
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-sm text-gray-500">{user?.display_name}</span>
-          <button
-            onClick={() => { logout(); navigate('/'); }}
-            className="text-sm text-gray-400 hover:text-gray-600"
+          <Link
+            to="/profile"
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors ${
+              location.pathname === '/profile' ? 'bg-primary-50' : 'hover:bg-gray-50'
+            }`}
           >
-            Logout
-          </button>
+            <div className="w-7 h-7 bg-primary-100 rounded-full flex items-center justify-center">
+              <span className="text-xs font-bold text-primary-600">
+                {(user?.display_name || user?.username || 'U')[0].toUpperCase()}
+              </span>
+            </div>
+            <span className="text-sm text-gray-600">{user?.display_name || user?.username}</span>
+          </Link>
         </div>
       </nav>
 

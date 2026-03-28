@@ -24,6 +24,7 @@ class TopicResponse(BaseModel):
     icon: str | None
     order_index: int
     concept_count: int = 0
+    question_count: int = 0
     mastery_percent: float = 0.0
     is_unlocked: bool = True
 

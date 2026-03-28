@@ -19,6 +19,7 @@ export interface TopicResponse {
   icon: string | null;
   order_index: number;
   concept_count: number;
+  question_count: number;
   mastery_percent: number;
   is_unlocked: boolean;
 }

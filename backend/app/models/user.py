@@ -11,6 +11,8 @@ class User(Base):
     password_hash = Column(String(255), nullable=False)
     display_name = Column(String(100), nullable=True)
     avatar_url = Column(Text, nullable=True)
+    degree = Column(String(50), nullable=True)
+    course = Column(String(100), nullable=True)
     current_streak = Column(Integer, default=0)
     longest_streak = Column(Integer, default=0)
     total_xp = Column(Integer, default=0)

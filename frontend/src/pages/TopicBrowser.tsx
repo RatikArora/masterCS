@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { conceptsApi, type TopicResponse, type ConceptResponse } from '../api/concepts';
+import { authApi } from '../api/auth';
 import PageContainer from '../components/layout/PageContainer';
 import Card from '../components/ui/Card';
 import Loading from '../components/ui/Loading';
@@ -17,6 +18,7 @@ export default function TopicBrowser() {
   const [concepts, setConcepts] = useState<Record<string, ConceptResponse[]>>({});
   const [loadingConcepts, setLoadingConcepts] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [resettingTopic, setResettingTopic] = useState<string | null>(null);
 
   useEffect(() => {
     if (!subjectId) return;
@@ -39,6 +41,23 @@ export default function TopicBrowser() {
       } finally {
         setLoadingConcepts(null);
       }
+    }
+  };
+
+  const handleResetTopic = async (topicId: string, topicName: string) => {
+    if (!confirm(`Reset progress for "${topicName}"?`)) return;
+    setResettingTopic(topicId);
+    try {
+      await authApi.resetTopicProgress(topicId);
+      // Refresh topics
+      const { data } = await conceptsApi.getTopics(subjectId!);
+      setTopics(data);
+      // Clear cached concepts for this topic
+      setConcepts((prev) => { const copy = { ...prev }; delete copy[topicId]; return copy; });
+    } catch {
+      alert('Failed to reset topic');
+    } finally {
+      setResettingTopic(null);
     }
   };
 
@@ -124,7 +143,7 @@ export default function TopicBrowser() {
                   {topic.description && (
                     <p className="text-xs text-gray-500 truncate mt-0.5">{topic.description}</p>
                   )}
-                  <p className="text-[11px] text-gray-400 mt-0.5">{topic.concept_count} concepts</p>
+                  <p className="text-[11px] text-gray-400 mt-0.5">{topic.concept_count} concepts · {topic.question_count} questions</p>
                 </div>
 
                 {/* Progress bar */}
@@ -189,8 +208,14 @@ export default function TopicBrowser() {
                           >
                             Practice All in {topic.name} →
                           </button>
+                          <button
+                            onClick={() => handleResetTopic(topic.id, topic.name)}
+                            disabled={resettingTopic === topic.id}
+                            className="w-full mt-1 py-2 text-xs font-medium text-red-500 bg-red-50 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-50"
+                          >
+                            {resettingTopic === topic.id ? 'Resetting...' : 'Reset Progress'}
+                          </button>
                         </>
-                      )}
                       )}
                     </div>
                   </motion.div>
