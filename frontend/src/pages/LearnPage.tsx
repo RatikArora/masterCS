@@ -77,15 +77,36 @@ export default function LearnPage() {
   if (isLoadingQuestion) return <Loading text="Finding the perfect question..." />;
 
   if (error) {
+    const isComplete = error.includes('covered everything') || error.includes('No more questions');
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 px-4">
-        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-          <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-          </svg>
+        <div className={`w-20 h-20 rounded-full flex items-center justify-center ${isComplete ? 'bg-green-100' : 'bg-gray-100'}`}>
+          {isComplete ? (
+            <svg className="w-10 h-10 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          ) : (
+            <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          )}
         </div>
-        <p className="text-gray-600 text-center">{error}</p>
-        <Button onClick={() => fetchNextQuestion(subjectId)} variant="secondary">Try Again</Button>
+        <h2 className="text-xl font-bold text-gray-900">
+          {isComplete ? 'All Done!' : 'Something went wrong'}
+        </h2>
+        <p className="text-gray-500 text-center text-sm max-w-xs">
+          {isComplete
+            ? "You've correctly answered all available questions. Check back later for new content or try a different topic."
+            : error}
+        </p>
+        <div className="flex gap-3 mt-2">
+          <Button onClick={() => window.location.href = `/topics?subject=${subjectId}`} variant="secondary">
+            Browse Topics
+          </Button>
+          <Button onClick={() => window.location.href = `/progress?subject=${subjectId}`}>
+            View Progress
+          </Button>
+        </div>
       </div>
     );
   }

@@ -86,13 +86,31 @@ class QuestionSelector:
         )
         return [r[0] for r in rows]
 
+    def _get_correctly_answered_ids(self, concept_ids: list[str] | None = None) -> set[str]:
+        """Get question IDs that the user has already answered correctly.
+        These are permanently excluded — no need to repeat mastered questions."""
+        query = (
+            self.db.query(UserQuestionAttempt.question_id)
+            .filter(
+                UserQuestionAttempt.user_id == self.user_id,
+                UserQuestionAttempt.is_correct == True,
+            )
+        )
+        if concept_ids:
+            query = query.filter(UserQuestionAttempt.concept_id.in_(concept_ids))
+        return {r[0] for r in query.distinct().all()}
+
     def _get_concept_focused_question(self) -> dict | None:
         """Select a question specifically for the focused concept, with adaptive difficulty."""
         if not self.concept_id:
             return None
 
         recently_answered = self._get_recently_answered_ids()
+        correctly_answered = self._get_correctly_answered_ids([self.concept_id])
         target_diff = self._get_target_difficulty()
+
+        # Exclude both recently answered and correctly mastered questions
+        exclude_ids = set(recently_answered) | correctly_answered
 
         query = (
             self.db.query(Question)
@@ -100,18 +118,20 @@ class QuestionSelector:
             .filter(QuestionConcept.concept_id == self.concept_id)
         )
 
-        if recently_answered:
-            query = query.filter(not_(Question.id.in_(recently_answered)))
+        if exclude_ids:
+            query = query.filter(not_(Question.id.in_(exclude_ids)))
 
         questions = query.all()
         if not questions:
-            # Allow recently answered if nothing else available
-            questions = (
+            # If all questions mastered, allow correctly answered but still exclude cooldown
+            query = (
                 self.db.query(Question)
                 .join(QuestionConcept, Question.id == QuestionConcept.question_id)
                 .filter(QuestionConcept.concept_id == self.concept_id)
-                .all()
             )
+            if recently_answered:
+                query = query.filter(not_(Question.id.in_(recently_answered)))
+            questions = query.all()
 
         if not questions:
             return None
@@ -301,10 +321,11 @@ class QuestionSelector:
         return self._pick_question_for_concept(next_concept.id, recently_answered)
 
     def _get_any_available_question(self) -> dict | None:
-        """Last resort: get any question not recently answered."""
+        """Last resort: get any question not correctly answered or recently seen."""
         recently_answered = self._get_recently_answered_ids()
         concept_ids = self._get_subject_concept_ids()
-        target_diff = self._get_target_difficulty()
+        correctly_answered = self._get_correctly_answered_ids(concept_ids)
+        exclude_ids = set(recently_answered) | correctly_answered
 
         query = (
             self.db.query(Question, QuestionConcept.concept_id)
@@ -312,19 +333,10 @@ class QuestionSelector:
             .filter(QuestionConcept.concept_id.in_(concept_ids))
         )
 
-        if recently_answered:
-            query = query.filter(not_(Question.id.in_(recently_answered)))
+        if exclude_ids:
+            query = query.filter(not_(Question.id.in_(exclude_ids)))
 
         questions = query.all()
-        if not questions:
-            # Even allow recently answered if nothing else
-            questions = (
-                self.db.query(Question, QuestionConcept.concept_id)
-                .join(QuestionConcept, Question.id == QuestionConcept.question_id)
-                .filter(QuestionConcept.concept_id.in_(concept_ids))
-                .all()
-            )
-
         if not questions:
             return None
 
@@ -332,8 +344,10 @@ class QuestionSelector:
         return self._build_result(q, concept_id)
 
     def _pick_question_for_concept(self, concept_id: str, recently_answered: list[str]) -> dict | None:
-        """Pick the best question for a given concept, considering difficulty and cooldown."""
+        """Pick the best question for a given concept, excluding mastered questions."""
         target_diff = self._get_target_difficulty()
+        correctly_answered = self._get_correctly_answered_ids([concept_id])
+        exclude_ids = set(recently_answered) | correctly_answered
 
         query = (
             self.db.query(Question)
@@ -341,8 +355,8 @@ class QuestionSelector:
             .filter(QuestionConcept.concept_id == concept_id)
         )
 
-        if recently_answered:
-            query = query.filter(not_(Question.id.in_(recently_answered)))
+        if exclude_ids:
+            query = query.filter(not_(Question.id.in_(exclude_ids)))
 
         questions = query.all()
         if not questions:
