@@ -38,10 +38,13 @@ nohup.out
 *.db
 *.sqlite3
 
-# PDFs (too large for git)
+# PDFs and data sources (confidential)
+*.pdf
 backend/pdfs/
+arch/
 
 # Misc
 *.pyc
 .pytest_cache/
 .mypy_cache/
+backend/app/db/seed_gate_papers.py
