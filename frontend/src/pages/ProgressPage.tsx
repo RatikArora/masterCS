@@ -23,7 +23,7 @@ const masteryLabels: Record<string, string> = {
 };
 
 const difficultyLabels: Record<number, string> = { 1: 'Easy', 2: 'Medium', 3: 'Hard' };
-const difficultyColors: Record<number, string> = { 1: 'text-green-600', 2: 'text-amber-600', 3: 'text-red-600' };
+const difficultyColors: Record<number, string> = { 1: 'text-emerald-600', 2: 'text-amber-600', 3: 'text-rose-600' };
 
 function MiniBar({ data }: { data: DailyStats[] }) {
   const maxQ = Math.max(...data.map((d) => d.questions_answered), 1);
@@ -38,7 +38,7 @@ function MiniBar({ data }: { data: DailyStats[] }) {
               initial={{ height: 0 }}
               animate={{ height: `${Math.max(h, 4)}%` }}
               transition={{ duration: 0.5, delay: i * 0.03 }}
-              className={`w-full rounded-t-sm ${d.questions_answered > 0 ? (isToday ? 'bg-primary-500' : 'bg-primary-300') : 'bg-gray-200'}`}
+              className={`w-full rounded-t-sm ${d.questions_answered > 0 ? (isToday ? 'bg-indigo-500' : 'bg-indigo-300') : 'bg-slate-200'}`}
               title={`${d.date}: ${d.questions_answered} questions, ${d.accuracy}% accuracy`}
             />
           </div>
@@ -86,8 +86,8 @@ function DonutChart({ distribution, total }: { distribution: Record<string, numb
         ))}
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-xl font-bold text-gray-900">{total}</span>
-        <span className="text-[9px] text-gray-400">concepts</span>
+        <span className="text-xl font-bold text-slate-900">{total}</span>
+        <span className="text-[9px] text-slate-400">concepts</span>
       </div>
     </div>
   );
@@ -98,7 +98,7 @@ function WeeklyHeatmap({ data }: { data: DailyStats[] }) {
   const maxQ = Math.max(...last7.map((d) => d.questions_answered), 1);
   const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   const intensity = (n: number) => {
-    if (n === 0) return 'bg-gray-100';
+    if (n === 0) return 'bg-slate-100';
     const ratio = n / maxQ;
     if (ratio <= 0.25) return 'bg-green-200';
     if (ratio <= 0.5) return 'bg-green-300';
@@ -118,9 +118,9 @@ function WeeklyHeatmap({ data }: { data: DailyStats[] }) {
             transition={{ delay: i * 0.06 }}
             className="flex-1 flex flex-col items-center gap-1"
           >
-            <span className="text-[9px] text-gray-400">{dayNames[dow]}</span>
+            <span className="text-[9px] text-slate-400">{dayNames[dow]}</span>
             <div
-              className={`w-full aspect-square rounded-lg ${intensity(d.questions_answered)} flex items-center justify-center`}
+              className={`w-full aspect-square rounded-xl ${intensity(d.questions_answered)} flex items-center justify-center`}
               title={`${d.date}: ${d.questions_answered} questions`}
             >
               {d.questions_answered > 0 && (
@@ -138,7 +138,7 @@ function WeeklyHeatmap({ data }: { data: DailyStats[] }) {
 
 function AccuracyTrendLine({ data }: { data: DailyStats[] }) {
   const pts = data.filter((d) => d.questions_answered > 0).slice(-10);
-  if (pts.length < 2) return <p className="text-xs text-gray-400 text-center py-6">Need more sessions for accuracy trend</p>;
+  if (pts.length < 2) return <p className="text-xs text-slate-400 text-center py-6">Need more sessions for accuracy trend</p>;
   const W = 320, H = 140;
   const P = { t: 15, r: 15, b: 28, l: 35 };
   const cw = W - P.l - P.r, ch = H - P.t - P.b;
@@ -205,7 +205,7 @@ function SubjectComparisonBars({ subjects, overviews }: { subjects: SubjectRespo
       };
     });
 
-  if (items.length === 0) return <p className="text-xs text-gray-400 text-center py-6">No subject data available</p>;
+  if (items.length === 0) return <p className="text-xs text-slate-400 text-center py-6">No subject data available</p>;
 
   const maxQ = Math.max(...items.map((d) => d.questions), 1);
   const metrics: { label: string; key: 'accuracy' | 'questions' | 'masteryPct'; max: number; suffix: string }[] = [
@@ -220,13 +220,13 @@ function SubjectComparisonBars({ subjects, overviews }: { subjects: SubjectRespo
         {items.map((d) => (
           <div key={d.name} className="flex items-center gap-1.5">
             <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: d.color }} />
-            <span className="text-xs text-gray-600">{d.name}</span>
+            <span className="text-xs text-slate-600">{d.name}</span>
           </div>
         ))}
       </div>
       {metrics.map((m) => (
         <div key={m.label}>
-          <p className="text-xs text-gray-500 mb-2">{m.label}</p>
+          <p className="text-xs text-slate-500 mb-2">{m.label}</p>
           <div className="space-y-2">
             {items.map((d, i) => {
               const val = d[m.key];
@@ -239,13 +239,13 @@ function SubjectComparisonBars({ subjects, overviews }: { subjects: SubjectRespo
                   transition={{ delay: i * 0.06 }}
                   className="flex items-center gap-2"
                 >
-                  <span className="text-[10px] text-gray-500 w-16 truncate">{d.name}</span>
-                  <div className="flex-1 h-7 bg-gray-100 rounded-lg overflow-hidden">
+                  <span className="text-[10px] text-slate-500 w-16 truncate">{d.name}</span>
+                  <div className="flex-1 h-7 bg-slate-100 rounded-xl overflow-hidden">
                     <motion.div
                       initial={{ width: 0 }}
                       animate={{ width: `${Math.max(pct, 3)}%` }}
                       transition={{ duration: 0.8, ease: 'easeOut' }}
-                      className="h-full rounded-lg flex items-center justify-end pr-2"
+                      className="h-full rounded-xl flex items-center justify-end pr-2"
                       style={{ backgroundColor: d.color }}
                     >
                       {pct > 15 && (
@@ -256,7 +256,7 @@ function SubjectComparisonBars({ subjects, overviews }: { subjects: SubjectRespo
                     </motion.div>
                   </div>
                   {pct <= 15 && (
-                    <span className="text-[10px] font-semibold text-gray-500">{val}{m.suffix}</span>
+                    <span className="text-[10px] font-semibold text-slate-500">{val}{m.suffix}</span>
                   )}
                 </motion.div>
               );
@@ -321,7 +321,7 @@ export default function ProgressPage() {
   };
 
   if (loading) return <Loading text="Loading progress..." />;
-  if (!overview) return <p className="text-center text-gray-500 py-20">No data available yet. Start learning first!</p>;
+  if (!overview) return <p className="text-center text-slate-500 py-20">No data available yet. Start learning first!</p>;
 
   const dist = overview.mastery_distribution;
   const totalAnswered = overview.total_questions_answered;
@@ -340,11 +340,11 @@ export default function ProgressPage() {
         {/* Header with completion ring */}
         <div className="flex items-center gap-4 mb-6">
           <ProgressRing percent={completionPct} size={72} strokeWidth={6}>
-            <span className="text-lg font-bold text-gray-900">{completionPct}%</span>
+            <span className="text-lg font-bold text-slate-900">{completionPct}%</span>
           </ProgressRing>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Your Progress</h1>
-            <p className="text-sm text-gray-500">
+            <h1 className="text-xl font-bold text-slate-900">Your Progress</h1>
+            <p className="text-sm text-slate-500">
               {overview.concepts_mastered} of {overview.total_concepts} concepts mastered
             </p>
           </div>
@@ -352,15 +352,15 @@ export default function ProgressPage() {
       </motion.div>
 
       {/* Tab Switcher */}
-      <div className="flex gap-1 bg-gray-100 rounded-xl p-1 mb-6">
+      <div className="flex gap-1 bg-slate-100 rounded-xl p-1 mb-6">
         {(['overview', 'topics', 'analytics', 'mistakes'] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${
+            className={`flex-1 py-2 text-sm font-medium rounded-xl transition-all ${
               activeTab === tab
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-500 hover:text-gray-700'
+                ? 'bg-white text-slate-900 shadow-sm'
+                : 'text-slate-500 hover:text-slate-700'
             }`}
           >
             {tab === 'overview' ? 'Overview' : tab === 'topics' ? 'Topics' : tab === 'analytics' ? 'Analytics' : `Mistakes${wrongQuestions.length > 0 ? ` (${wrongQuestions.length})` : ''}`}
@@ -374,8 +374,8 @@ export default function ProgressPage() {
           {/* Stats Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
             {[
-              { label: 'Total Questions', value: totalAnswered.toLocaleString(), sub: 'answered', color: 'text-blue-600', icon: '📝' },
-              { label: 'Accuracy', value: `${Math.round(overview.overall_accuracy)}%`, sub: `${totalAnswered > 0 ? Math.round((overview.overall_accuracy / 100) * totalAnswered) : 0} correct`, color: 'text-green-600', icon: '🎯' },
+              { label: 'Total Questions', value: totalAnswered.toLocaleString(), sub: 'answered', color: 'text-indigo-600', icon: '📝' },
+              { label: 'Accuracy', value: `${Math.round(overview.overall_accuracy)}%`, sub: `${totalAnswered > 0 ? Math.round((overview.overall_accuracy / 100) * totalAnswered) : 0} correct`, color: 'text-emerald-600', icon: '🎯' },
               { label: 'Best Streak', value: overview.longest_streak, sub: `current: ${overview.current_streak}`, color: 'text-orange-600', icon: '🔥' },
               { label: 'Total XP', value: overview.total_xp.toLocaleString(), sub: 'earned', color: 'text-amber-600', icon: '⭐' },
               { label: 'Avg Speed', value: avgSpeedSeconds > 0 ? `${avgSpeedSeconds}s` : '—', sub: 'per question', color: 'text-purple-600', icon: '⚡' },
@@ -388,9 +388,9 @@ export default function ProgressPage() {
                 transition={{ delay: i * 0.05 }}
               >
                 <Card padding="sm" className="text-center">
-                  <p className="text-xs text-gray-400 mb-1">{stat.icon} {stat.label}</p>
+                  <p className="text-xs text-slate-400 mb-1">{stat.icon} {stat.label}</p>
                   <p className={`text-xl font-bold ${stat.color}`}>{stat.value}</p>
-                  <p className="text-[10px] text-gray-400">{stat.sub}</p>
+                  <p className="text-[10px] text-slate-400">{stat.sub}</p>
                 </Card>
               </motion.div>
             ))}
@@ -400,13 +400,13 @@ export default function ProgressPage() {
           {dailyStats.length > 0 && (
             <Card className="mb-6">
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-semibold text-gray-700">Last 14 Days</h3>
-                <p className="text-xs text-gray-400">
+                <h3 className="text-sm font-semibold text-slate-700">Last 14 Days</h3>
+                <p className="text-xs text-slate-400">
                   {dailyStats.reduce((a, d) => a + d.questions_answered, 0)} questions total
                 </p>
               </div>
               <MiniBar data={dailyStats.slice(-14)} />
-              <div className="flex justify-between mt-1 text-[9px] text-gray-400">
+              <div className="flex justify-between mt-1 text-[9px] text-slate-400">
                 <span>{dailyStats[0]?.date.slice(5)}</span>
                 <span>Today</span>
               </div>
@@ -415,21 +415,21 @@ export default function ProgressPage() {
 
           {/* Mastery Distribution */}
           <Card className="mb-6">
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">Mastery Distribution</h3>
+            <h3 className="text-sm font-semibold text-slate-700 mb-3">Mastery Distribution</h3>
             <div className="flex flex-col sm:flex-row items-center gap-4">
               <DonutChart distribution={dist} total={overview.total_concepts} />
               <div className="grid grid-cols-3 sm:grid-cols-1 gap-2 flex-1 w-full sm:w-auto">
                 {Object.entries(dist).map(([level, count]) => {
                   const pct = overview.total_concepts > 0 ? Math.round((count / overview.total_concepts) * 100) : 0;
                   return (
-                    <div key={level} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
+                    <div key={level} className="flex items-center gap-2 p-2 bg-slate-50 rounded-xl">
                       <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: masteryColors[level] }} />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-baseline gap-1">
-                          <span className="text-sm font-semibold text-gray-700">{count}</span>
-                          <span className="text-[9px] text-gray-400">({pct}%)</span>
+                          <span className="text-sm font-semibold text-slate-700">{count}</span>
+                          <span className="text-[9px] text-slate-400">({pct}%)</span>
                         </div>
-                        <p className="text-[9px] text-gray-400 truncate">{masteryLabels[level] || level}</p>
+                        <p className="text-[9px] text-slate-400 truncate">{masteryLabels[level] || level}</p>
                       </div>
                     </div>
                   );
@@ -442,10 +442,10 @@ export default function ProgressPage() {
           {dailyStats.length >= 7 && (
             <Card className="mb-6">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-semibold text-gray-700">This Week</h3>
-                <div className="flex items-center gap-1 text-[9px] text-gray-400">
+                <h3 className="text-sm font-semibold text-slate-700">This Week</h3>
+                <div className="flex items-center gap-1 text-[9px] text-slate-400">
                   <span>Less</span>
-                  <span className="w-3 h-3 rounded bg-gray-100" />
+                  <span className="w-3 h-3 rounded bg-slate-100" />
                   <span className="w-3 h-3 rounded bg-green-200" />
                   <span className="w-3 h-3 rounded bg-green-400" />
                   <span className="w-3 h-3 rounded bg-green-600" />
@@ -459,23 +459,23 @@ export default function ProgressPage() {
           {/* Streak & Performance */}
           <div className="grid grid-cols-2 gap-3 mb-6">
             <Card padding="sm" className="text-center">
-              <p className="text-2xl font-bold text-orange-500">{overview.current_streak}</p>
-              <p className="text-[10px] text-gray-400">Day Streak</p>
-              <p className="text-[9px] text-gray-300 mt-0.5">Best: {overview.longest_streak}</p>
+              <p className="text-xl font-bold text-orange-500">{overview.current_streak}</p>
+              <p className="text-[10px] text-slate-400">Day Streak</p>
+              <p className="text-[9px] text-slate-300 mt-0.5">Best: {overview.longest_streak}</p>
             </Card>
             <Card padding="sm" className="text-center">
-              <p className="text-2xl font-bold text-green-500">
+              <p className="text-xl font-bold text-green-500">
                 {totalAnswered > 0 ? Math.round(overview.overall_accuracy) : 0}%
               </p>
-              <p className="text-[10px] text-gray-400">Overall Accuracy</p>
-              <p className="text-[9px] text-gray-300 mt-0.5">{totalAnswered} questions</p>
+              <p className="text-[10px] text-slate-400">Overall Accuracy</p>
+              <p className="text-[9px] text-slate-300 mt-0.5">{totalAnswered} questions</p>
             </Card>
           </div>
 
           {/* Topic-wise Breakdown */}
           {topics.length > 0 && (
             <Card className="mb-6">
-              <h3 className="text-sm font-semibold text-gray-700 mb-3">Topic Breakdown</h3>
+              <h3 className="text-sm font-semibold text-slate-700 mb-3">Topic Breakdown</h3>
               <div className="space-y-3">
                 {topics.map((t) => {
                   const pct = Math.round(t.mastery_percent);
@@ -483,13 +483,13 @@ export default function ProgressPage() {
                   return (
                     <div key={t.topic_id}>
                       <div className="flex items-center justify-between mb-1">
-                        <p className="text-xs font-medium text-gray-700 truncate flex-1">{t.topic_name}</p>
+                        <p className="text-xs font-medium text-slate-700 truncate flex-1">{t.topic_name}</p>
                         <div className="flex items-center gap-2">
-                          <span className="text-[10px] text-gray-400">{t.mastered_concepts}/{t.total_concepts}</span>
-                          <span className="text-[10px] font-semibold text-gray-600">{pct}%</span>
+                          <span className="text-[10px] text-slate-400">{t.mastered_concepts}/{t.total_concepts}</span>
+                          <span className="text-[10px] font-semibold text-slate-600">{pct}%</span>
                         </div>
                       </div>
-                      <div className="flex gap-1 h-2 rounded-full overflow-hidden bg-gray-100">
+                      <div className="flex gap-1 h-2 rounded-full overflow-hidden bg-slate-100">
                         <motion.div
                           initial={{ width: 0 }}
                           animate={{ width: `${pct}%` }}
@@ -500,7 +500,7 @@ export default function ProgressPage() {
                         />
                       </div>
                       <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-[9px] text-gray-400">{conf}% confidence</span>
+                        <span className="text-[9px] text-slate-400">{conf}% confidence</span>
                       </div>
                     </div>
                   );
@@ -512,7 +512,7 @@ export default function ProgressPage() {
           {/* Weak Areas */}
           {weakAreas.length > 0 && (
             <>
-              <h3 className="text-sm font-semibold text-gray-700 mb-3">Areas to Improve</h3>
+              <h3 className="text-sm font-semibold text-slate-700 mb-3">Areas to Improve</h3>
               <div className="space-y-2 mb-6">
                 {weakAreas.map((w) => (
                   <Card
@@ -523,13 +523,13 @@ export default function ProgressPage() {
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-800">{w.concept_name}</p>
-                        <p className="text-xs text-gray-400">{w.topic_name} · {Math.round(w.accuracy)}% accuracy</p>
+                        <p className="text-sm font-medium text-slate-800">{w.concept_name}</p>
+                        <p className="text-xs text-slate-400">{w.topic_name} · {Math.round(w.accuracy)}% accuracy</p>
                       </div>
                       <div className="flex items-center gap-2">
                         <MasteryBadge level="learning" size="xs" />
-                        <svg className="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        <svg className="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
                         </svg>
                       </div>
                     </div>
@@ -543,7 +543,7 @@ export default function ProgressPage() {
           {subjectId && (
             <Link
               to={`/learn?subject=${subjectId}`}
-              className="block w-full py-3 bg-primary-600 text-white text-center font-semibold rounded-xl hover:bg-primary-700 transition-colors text-sm"
+              className="block w-full py-3 bg-primary-600 text-white text-center font-semibold rounded-xl hover:bg-indigo-700 transition-colors text-sm"
             >
               Continue Learning →
             </Link>
@@ -556,20 +556,20 @@ export default function ProgressPage() {
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
           {/* Subject Comparison */}
           <Card>
-            <h3 className="text-sm font-semibold text-gray-700 mb-4">Subject Comparison</h3>
+            <h3 className="text-sm font-semibold text-slate-700 mb-4">Subject Comparison</h3>
             <SubjectComparisonBars subjects={allSubjects} overviews={allOverviews} />
           </Card>
 
           {/* Accuracy Trend */}
           <Card>
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">Accuracy Trend</h3>
+            <h3 className="text-sm font-semibold text-slate-700 mb-3">Accuracy Trend</h3>
             <AccuracyTrendLine data={dailyStats} />
           </Card>
 
           {/* Per-Subject Stats */}
           {allSubjects.filter((s) => allOverviews[s.id]).length > 0 && (
             <Card>
-              <h3 className="text-sm font-semibold text-gray-700 mb-3">Subject Details</h3>
+              <h3 className="text-sm font-semibold text-slate-700 mb-3">Subject Details</h3>
               <div className="space-y-3">
                 {allSubjects.filter((s) => allOverviews[s.id]).map((s, i) => {
                   const ov = allOverviews[s.id];
@@ -579,15 +579,15 @@ export default function ProgressPage() {
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: i * 0.08 }}
-                      className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl"
+                      className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl"
                     >
                       <span
                         className="w-3 h-3 rounded-full flex-shrink-0"
                         style={{ backgroundColor: s.color || subjectPalette[i % subjectPalette.length] }}
                       />
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-800 truncate">{s.name}</p>
-                        <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-0.5 text-[10px] text-gray-400">
+                        <p className="text-sm font-medium text-slate-800 truncate">{s.name}</p>
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-0.5 text-[10px] text-slate-400">
                           <span>{ov.total_questions_answered} questions</span>
                           <span>{Math.round(ov.overall_accuracy)}% accuracy</span>
                           <span>{ov.concepts_mastered}/{ov.total_concepts} mastered</span>
@@ -595,7 +595,7 @@ export default function ProgressPage() {
                       </div>
                       <div className="text-right flex-shrink-0">
                         <p className="text-sm font-bold text-amber-600">{ov.total_xp.toLocaleString()}</p>
-                        <p className="text-[9px] text-gray-400">XP</p>
+                        <p className="text-[9px] text-slate-400">XP</p>
                       </div>
                     </motion.div>
                   );
@@ -628,18 +628,18 @@ export default function ProgressPage() {
                       <span className="text-[10px] font-semibold">{pct}%</span>
                     </ProgressRing>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-800 truncate">{t.topic_name}</p>
+                      <p className="text-sm font-medium text-slate-800 truncate">{t.topic_name}</p>
                       <div className="flex items-center gap-3 mt-0.5">
-                        <span className="text-xs text-gray-400">
+                        <span className="text-xs text-slate-400">
                           {t.mastered_concepts}/{t.total_concepts} mastered
                         </span>
-                        <span className="text-xs text-gray-400">
+                        <span className="text-xs text-slate-400">
                           {Math.round(t.avg_confidence * 100)}% confidence
                         </span>
                       </div>
                     </div>
-                    <svg className="w-4 h-4 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    <svg className="w-4 h-4 text-slate-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
                     </svg>
                   </div>
                 </Card>
@@ -655,11 +655,11 @@ export default function ProgressPage() {
           {wrongQuestions.length === 0 ? (
             <div className="text-center py-12">
               <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <p className="text-gray-500 text-sm">No wrong answers yet. Keep learning!</p>
+              <p className="text-slate-500 text-sm">No wrong answers yet. Keep learning!</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -673,7 +673,7 @@ export default function ProgressPage() {
                   <Card padding="sm">
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-medium text-gray-400 bg-gray-100 px-2 py-0.5 rounded">
+                        <span className="text-[10px] font-medium text-slate-400 bg-slate-100 px-2 py-0.5 rounded">
                           {wq.concept_name}
                         </span>
                         <span className={`text-[10px] font-medium ${difficultyColors[wq.difficulty]}`}>
@@ -684,25 +684,25 @@ export default function ProgressPage() {
                         {wq.attempt_count}× wrong
                       </span>
                     </div>
-                    <div className="text-sm text-gray-800 mb-2 leading-relaxed"><RichText content={wq.question_text} /></div>
+                    <div className="text-sm text-slate-800 mb-2 leading-relaxed"><RichText content={wq.question_text} /></div>
                     <div className="grid grid-cols-2 gap-2 text-xs">
-                      <div className="bg-red-50 rounded-lg px-2.5 py-1.5">
+                      <div className="bg-rose-50 rounded-xl px-2.5 py-1.5">
                         <p className="text-[10px] text-red-400 mb-0.5">Your answer</p>
                         <p className="text-red-700 font-medium">{wq.selected_answer}</p>
                       </div>
-                      <div className="bg-green-50 rounded-lg px-2.5 py-1.5">
+                      <div className="bg-green-50 rounded-xl px-2.5 py-1.5">
                         <p className="text-[10px] text-green-400 mb-0.5">Correct answer</p>
                         <p className="text-green-700 font-medium">{wq.correct_answer}</p>
                       </div>
                     </div>
                     {wq.explanation && (
-                      <div className="text-xs text-gray-500 mt-2 leading-relaxed">
+                      <div className="text-xs text-slate-500 mt-2 leading-relaxed">
                         <RichText content={wq.explanation} />
                       </div>
                     )}
                     <button
                       onClick={() => navigate(`/learn?subject=${subjectId}&concept=${wq.concept_id}`)}
-                      className="mt-2 w-full py-1.5 text-xs font-medium text-primary-600 bg-primary-50 rounded-lg hover:bg-primary-100 transition-colors"
+                      className="mt-2 w-full py-1.5 text-xs font-medium text-indigo-600 bg-indigo-50 rounded-xl hover:bg-indigo-100 transition-colors"
                     >
                       Practice this concept →
                     </button>

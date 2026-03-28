@@ -32,3 +32,21 @@ class QuestionConcept(Base):
         Index("ix_qc_concept", "concept_id"),
         Index("ix_qc_question", "question_id"),
     )
+
+
+class QuestionReport(Base):
+    """User-submitted reports for incorrect or problematic questions."""
+    __tablename__ = "question_reports"
+
+    id = Column(String(36), primary_key=True)
+    question_id = Column(String(36), ForeignKey("questions.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    reason = Column(String(50), nullable=False)  # wrong_answer, unclear, duplicate, outdated, other
+    details = Column(Text, nullable=True)
+    status = Column(String(20), default="pending")  # pending, reviewed, fixed, dismissed
+    created_at = Column(DateTime, server_default=func.now())
+
+    __table_args__ = (
+        Index("ix_qr_question", "question_id"),
+        Index("ix_qr_status", "status"),
+    )

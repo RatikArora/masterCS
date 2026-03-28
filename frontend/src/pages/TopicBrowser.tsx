@@ -49,10 +49,8 @@ export default function TopicBrowser() {
     setResettingTopic(topicId);
     try {
       await authApi.resetTopicProgress(topicId);
-      // Refresh topics
       const { data } = await conceptsApi.getTopics(subjectId!);
       setTopics(data.items);
-      // Clear cached concepts for this topic
       setConcepts((prev) => { const copy = { ...prev }; delete copy[topicId]; return copy; });
     } catch {
       alert('Failed to reset topic');
@@ -65,8 +63,8 @@ export default function TopicBrowser() {
     return (
       <PageContainer>
         <div className="text-center py-12">
-          <p className="text-gray-500">No subject selected.</p>
-          <button onClick={() => navigate('/dashboard')} className="mt-3 text-primary-600 font-medium text-sm">
+          <p className="text-slate-500 text-sm">No subject selected.</p>
+          <button onClick={() => navigate('/dashboard')} className="mt-3 text-indigo-600 font-medium text-sm">
             ← Back to Dashboard
           </button>
         </div>
@@ -83,147 +81,147 @@ export default function TopicBrowser() {
 
   return (
     <PageContainer>
-      {/* Header */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
-        <button onClick={() => navigate('/dashboard')} className="text-sm text-gray-400 hover:text-gray-600 mb-2 flex items-center gap-1">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          Dashboard
-        </button>
-        <h1 className="text-2xl font-bold text-gray-900">Topics</h1>
-        <p className="text-sm text-gray-500 mt-1">
-          {topics.length} topics · {totalConcepts} concepts · {avgMastery}% mastered
-        </p>
-      </motion.div>
+      <div className="space-y-5">
+        {/* Header */}
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}>
+          <button onClick={() => navigate('/dashboard')} className="text-xs text-slate-400 hover:text-slate-600 mb-2 flex items-center gap-1 transition-colors">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
+            </svg>
+            Dashboard
+          </button>
+          <h1 className="text-xl font-bold text-slate-900">Topics</h1>
+          <p className="text-xs text-slate-400 mt-0.5">
+            {topics.length} topics · {totalConcepts} concepts · {avgMastery}% mastered
+          </p>
+        </motion.div>
 
-      {/* Start Learning Button */}
-      <motion.button
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.05 }}
-        onClick={() => navigate(`/learn?subject=${subjectId}`)}
-        className="w-full mb-6 py-3.5 bg-primary-600 text-white font-semibold rounded-xl hover:bg-primary-700 transition-colors shadow-lg shadow-primary-600/20"
-      >
-        Start Adaptive Learning
-      </motion.button>
+        {/* Start Learning Button */}
+        <motion.button
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05, duration: 0.2 }}
+          onClick={() => navigate(`/learn?subject=${subjectId}`)}
+          className="w-full py-3 bg-indigo-600 text-white text-sm font-medium rounded-2xl hover:bg-indigo-700 transition-colors duration-200 shadow-sm"
+        >
+          Start Adaptive Learning
+        </motion.button>
 
-      {/* Topic List */}
-      <div className="space-y-3">
-        {topics.map((topic, i) => (
-          <motion.div
-            key={topic.id}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 + i * 0.04 }}
-          >
-            <Card>
-              {/* Topic Header */}
-              <button
-                onClick={() => handleToggleTopic(topic.id)}
-                className="w-full flex items-center gap-3 text-left"
-              >
-                {/* Mastery indicator */}
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                  topic.mastery_percent >= 80 ? 'bg-green-100' :
-                  topic.mastery_percent >= 40 ? 'bg-yellow-100' :
-                  topic.mastery_percent > 0 ? 'bg-blue-100' : 'bg-gray-100'
-                }`}>
-                  <span className={`text-sm font-bold ${
-                    topic.mastery_percent >= 80 ? 'text-green-600' :
-                    topic.mastery_percent >= 40 ? 'text-yellow-600' :
-                    topic.mastery_percent > 0 ? 'text-blue-600' : 'text-gray-400'
-                  }`}>
-                    {Math.round(topic.mastery_percent)}%
-                  </span>
-                </div>
-
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-gray-900 text-sm">{topic.name}</h3>
-                  {topic.description && (
-                    <p className="text-xs text-gray-500 truncate mt-0.5">{topic.description}</p>
-                  )}
-                  <p className="text-[11px] text-gray-400 mt-0.5">{topic.concept_count} concepts · {topic.question_count} questions</p>
-                </div>
-
-                {/* Progress bar */}
-                <div className="w-16 flex-shrink-0">
-                  <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                    <motion.div
-                      className={`h-full rounded-full ${
-                        topic.mastery_percent >= 80 ? 'bg-green-500' :
-                        topic.mastery_percent >= 40 ? 'bg-yellow-500' : 'bg-primary-500'
-                      }`}
-                      initial={{ width: 0 }}
-                      animate={{ width: `${Math.min(topic.mastery_percent, 100)}%` }}
-                      transition={{ delay: 0.2 + i * 0.04, duration: 0.6 }}
-                    />
-                  </div>
-                </div>
-
-                {/* Expand icon */}
-                <motion.svg
-                  animate={{ rotate: expandedTopic === topic.id ? 180 : 0 }}
-                  className="w-4 h-4 text-gray-400 flex-shrink-0"
-                  fill="none" stroke="currentColor" viewBox="0 0 24 24"
+        {/* Topic List */}
+        <div className="space-y-2.5">
+          {topics.map((topic, i) => (
+            <motion.div
+              key={topic.id}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.08 + i * 0.03, duration: 0.2 }}
+            >
+              <Card>
+                {/* Topic Header */}
+                <button
+                  onClick={() => handleToggleTopic(topic.id)}
+                  className="w-full flex items-center gap-3 text-left"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </motion.svg>
-              </button>
+                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                    topic.mastery_percent >= 80 ? 'bg-emerald-50' :
+                    topic.mastery_percent >= 40 ? 'bg-amber-50' :
+                    topic.mastery_percent > 0 ? 'bg-indigo-50' : 'bg-slate-50'
+                  }`}>
+                    <span className={`text-xs font-bold ${
+                      topic.mastery_percent >= 80 ? 'text-emerald-600' :
+                      topic.mastery_percent >= 40 ? 'text-amber-600' :
+                      topic.mastery_percent > 0 ? 'text-indigo-600' : 'text-slate-400'
+                    }`}>
+                      {Math.round(topic.mastery_percent)}%
+                    </span>
+                  </div>
 
-              {/* Expanded Concepts */}
-              <AnimatePresence>
-                {expandedTopic === topic.id && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.25 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="mt-3 pt-3 border-t border-gray-100 space-y-2">
-                      {loadingConcepts === topic.id ? (
-                        <p className="text-xs text-gray-400 text-center py-2">Loading concepts...</p>
-                      ) : (
-                        <>
-                          {concepts[topic.id]?.map((concept) => (
-                            <button
-                              key={concept.id}
-                              onClick={() => navigate(`/learn?subject=${subjectId}&concept=${concept.id}`)}
-                              className="w-full flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-primary-50 transition-colors text-left group"
-                            >
-                              <MasteryBadge level={concept.mastery_level} size="sm" />
-                              <span className="text-sm text-gray-700 flex-1 group-hover:text-primary-700 transition-colors">{concept.name}</span>
-                              <span className="text-[10px] text-gray-400 mr-1">
-                                {Math.round(concept.confidence_score * 100)}%
-                              </span>
-                              <svg className="w-3.5 h-3.5 text-gray-300 group-hover:text-primary-400 transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                              </svg>
-                            </button>
-                          ))}
-                          <button
-                            onClick={() => navigate(`/learn?subject=${subjectId}&topic=${topic.id}`)}
-                            className="w-full mt-2 py-2 text-xs font-semibold text-primary-600 bg-primary-50 hover:bg-primary-100 rounded-lg transition-colors"
-                          >
-                            Practice All in {topic.name} →
-                          </button>
-                          <button
-                            onClick={() => handleResetTopic(topic.id, topic.name)}
-                            disabled={resettingTopic === topic.id}
-                            className="w-full mt-1 py-2 text-xs font-medium text-red-500 bg-red-50 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-50"
-                          >
-                            {resettingTopic === topic.id ? 'Resetting...' : 'Reset Progress'}
-                          </button>
-                        </>
-                      )}
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-slate-900 text-sm">{topic.name}</h3>
+                    {topic.description && (
+                      <p className="text-xs text-slate-400 truncate mt-0.5">{topic.description}</p>
+                    )}
+                    <p className="text-[10px] text-slate-400 mt-0.5">{topic.concept_count} concepts · {topic.question_count} questions</p>
+                  </div>
+
+                  <div className="w-14 flex-shrink-0">
+                    <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                      <motion.div
+                        className={`h-full rounded-full ${
+                          topic.mastery_percent >= 80 ? 'bg-emerald-500' :
+                          topic.mastery_percent >= 40 ? 'bg-amber-500' : 'bg-indigo-500'
+                        }`}
+                        initial={{ width: 0 }}
+                        animate={{ width: `${Math.min(topic.mastery_percent, 100)}%` }}
+                        transition={{ delay: 0.15 + i * 0.03, duration: 0.5 }}
+                      />
                     </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </Card>
-          </motion.div>
-        ))}
+                  </div>
+
+                  <motion.svg
+                    animate={{ rotate: expandedTopic === topic.id ? 180 : 0 }}
+                    transition={{ duration: 0.15 }}
+                    className="w-4 h-4 text-slate-300 flex-shrink-0"
+                    fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 9l-7 7-7-7" />
+                  </motion.svg>
+                </button>
+
+                {/* Expanded Concepts */}
+                <AnimatePresence>
+                  {expandedTopic === topic.id && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="mt-3 pt-3 border-t border-slate-100 space-y-1.5">
+                        {loadingConcepts === topic.id ? (
+                          <p className="text-xs text-slate-400 text-center py-2">Loading concepts...</p>
+                        ) : (
+                          <>
+                            {concepts[topic.id]?.map((concept) => (
+                              <button
+                                key={concept.id}
+                                onClick={() => navigate(`/learn?subject=${subjectId}&concept=${concept.id}`)}
+                                className="w-full flex items-center gap-2 px-2 py-2 rounded-xl hover:bg-indigo-50 transition-colors duration-200 text-left group"
+                              >
+                                <MasteryBadge level={concept.mastery_level} size="sm" />
+                                <span className="text-sm text-slate-700 flex-1 group-hover:text-indigo-600 transition-colors">{concept.name}</span>
+                                <span className="text-[10px] text-slate-400 mr-1 tabular-nums">
+                                  {Math.round(concept.confidence_score * 100)}%
+                                </span>
+                                <svg className="w-3.5 h-3.5 text-slate-300 group-hover:text-indigo-400 transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
+                                </svg>
+                              </button>
+                            ))}
+                            <button
+                              onClick={() => navigate(`/learn?subject=${subjectId}&topic=${topic.id}`)}
+                              className="w-full mt-1.5 py-2 text-xs font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-xl transition-colors duration-200"
+                            >
+                              Practice All in {topic.name} →
+                            </button>
+                            <button
+                              onClick={() => handleResetTopic(topic.id, topic.name)}
+                              disabled={resettingTopic === topic.id}
+                              className="w-full mt-1 py-2 text-xs font-medium text-rose-500 bg-rose-50 hover:bg-rose-100 rounded-xl transition-colors duration-200 disabled:opacity-50"
+                            >
+                              {resettingTopic === topic.id ? 'Resetting...' : 'Reset Progress'}
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </Card>
+            </motion.div>
+          ))}
+        </div>
       </div>
     </PageContainer>
   );

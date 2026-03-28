@@ -38,6 +38,9 @@ nohup.out
 *.db
 *.sqlite3
 
+# PDFs (too large for git)
+backend/pdfs/
+
 # Misc
 *.pyc
 .pytest_cache/

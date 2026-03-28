@@ -96,4 +96,10 @@ export const learningApi = {
 
   getConceptNotes: (conceptId: string) =>
     api.get<ConceptNotes>(`/learn/concept-notes/${conceptId}`),
+
+  reportQuestion: (data: { question_id: string; reason: string; details?: string }) =>
+    api.post<{ message: string; report_count: number }>('/learn/report-question', data),
+
+  getQuestionReports: (questionId: string) =>
+    api.get<{ report_count: number; user_reported: boolean }>(`/learn/question-reports/${questionId}`),
 };

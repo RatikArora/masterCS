@@ -7,11 +7,11 @@ from sqlalchemy import func, and_
 from app.db.session import get_db
 from app.api.dependencies import get_current_user
 from app.models.user import User
-from app.models.question import Question, QuestionConcept
+from app.models.question import Question, QuestionConcept, QuestionReport
 from app.models.concept import Concept
 from app.models.subject import Topic
 from app.models.progress import UserQuestionAttempt
-from app.schemas.question import AnswerSubmit, AnswerResult, LearningSession, WrongQuestionItem
+from app.schemas.question import AnswerSubmit, AnswerResult, LearningSession, WrongQuestionItem, ReportSubmit
 from app.services.learning_engine import LearningEngine
 from app.core.pagination import PaginationParams, PaginatedResponse, paginate_query
 
@@ -149,3 +149,78 @@ def get_concept_notes(
         "explanation": concept.explanation,
         "key_points": concept.key_points or [],
     }
+
+
+@router.post("/report-question")
+def report_question(
+    report: ReportSubmit,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Report a question as incorrect, unclear, or problematic."""
+    import uuid
+
+    question = db.query(Question).filter(Question.id == report.question_id).first()
+    if not question:
+        raise HTTPException(status_code=404, detail="Question not found")
+
+    # Check for duplicate report from same user
+    existing = (
+        db.query(QuestionReport)
+        .filter(
+            QuestionReport.question_id == report.question_id,
+            QuestionReport.user_id == user.id,
+            QuestionReport.status == "pending",
+        )
+        .first()
+    )
+    if existing:
+        raise HTTPException(status_code=409, detail="You've already reported this question")
+
+    new_report = QuestionReport(
+        id=str(uuid.uuid4()),
+        question_id=report.question_id,
+        user_id=user.id,
+        reason=report.reason,
+        details=report.details,
+    )
+    db.add(new_report)
+
+    # Get total report count for this question
+    report_count = (
+        db.query(func.count(QuestionReport.id))
+        .filter(QuestionReport.question_id == report.question_id)
+        .scalar()
+    ) or 0
+
+    db.commit()
+
+    return {
+        "message": "Report submitted. Thank you for helping improve MasterCS!",
+        "report_count": report_count + 1,
+    }
+
+
+@router.get("/question-reports/{question_id}")
+def get_question_reports(
+    question_id: str,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Get report count for a question and whether current user has reported it."""
+    total = (
+        db.query(func.count(QuestionReport.id))
+        .filter(QuestionReport.question_id == question_id)
+        .scalar()
+    ) or 0
+
+    user_reported = (
+        db.query(QuestionReport)
+        .filter(
+            QuestionReport.question_id == question_id,
+            QuestionReport.user_id == user.id,
+        )
+        .first()
+    ) is not None
+
+    return {"report_count": total, "user_reported": user_reported}

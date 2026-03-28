@@ -79,3 +79,9 @@ class WrongQuestionItem(BaseModel):
     difficulty: int
     attempt_count: int
     last_attempted: str
+
+
+class ReportSubmit(BaseModel):
+    question_id: str
+    reason: str  # wrong_answer, unclear, duplicate, outdated, other
+    details: str | None = None

@@ -5,28 +5,29 @@ export default function XPBar({ current, goal }: { current: number; goal: number
   const isComplete = current >= goal;
 
   return (
-    <div className="flex-1 min-w-[140px]">
-      <div className="flex items-center justify-between text-[11px] text-gray-400 mb-1.5">
-        <span className="flex items-center gap-1">
-          <svg className="w-3 h-3 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+    <div className="flex-1 min-w-0">
+      <div className="flex items-center justify-between text-xs mb-1">
+        <span className="flex items-center gap-1 text-slate-600">
+          <svg className="w-3 h-3 text-indigo-500" fill="currentColor" viewBox="0 0 20 20">
             <path d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z"/>
           </svg>
-          <span className="font-medium text-gray-600">{current} XP</span> today
+          <span className="font-medium">{current}</span>
+          <span className="text-slate-400">/ {goal}</span>
         </span>
-        <span className={isComplete ? 'text-green-500 font-medium' : ''}>
-          {isComplete ? 'Goal reached!' : `Goal: ${goal}`}
-        </span>
+        {isComplete && (
+          <span className="text-emerald-500 font-medium text-[10px]">Done!</span>
+        )}
       </div>
-      <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+      <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
         <motion.div
           className={`h-full rounded-full ${
             isComplete
-              ? 'bg-gradient-to-r from-green-400 to-emerald-500'
-              : 'bg-gradient-to-r from-primary-400 to-primary-500'
+              ? 'bg-emerald-500'
+              : 'bg-indigo-500'
           }`}
           initial={{ width: 0 }}
           animate={{ width: `${percent}%` }}
-          transition={{ duration: 0.8, ease: 'easeOut' }}
+          transition={{ duration: 0.6, ease: 'easeOut' }}
         />
       </div>
     </div>

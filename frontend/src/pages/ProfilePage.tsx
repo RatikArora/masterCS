@@ -81,170 +81,172 @@ export default function ProfilePage() {
 
   return (
     <PageContainer>
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">Profile</h1>
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}>
+        <div className="space-y-5">
+          <h1 className="text-xl font-bold text-slate-900">Profile</h1>
 
-        {/* User Info */}
-        <Card className="mb-4">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="w-14 h-14 bg-primary-100 rounded-full flex items-center justify-center">
-              <span className="text-xl font-bold text-primary-600">
-                {(user?.display_name || user?.username || 'U')[0].toUpperCase()}
-              </span>
-            </div>
-            <div>
-              <p className="font-semibold text-gray-900">{user?.username}</p>
-              <p className="text-xs text-gray-400">{user?.email}</p>
-              <p className="text-xs text-gray-400">Member since {new Date(user?.created_at || '').toLocaleDateString()}</p>
-            </div>
-          </div>
-
-          {/* Stats */}
-          <div className="grid grid-cols-3 gap-3 mb-4">
-            <div className="text-center p-2 bg-gray-50 rounded-lg">
-              <p className="text-lg font-bold text-primary-600">{user?.total_xp?.toLocaleString() || 0}</p>
-              <p className="text-[10px] text-gray-400">Total XP</p>
-            </div>
-            <div className="text-center p-2 bg-gray-50 rounded-lg">
-              <p className="text-lg font-bold text-orange-500">{user?.current_streak || 0}</p>
-              <p className="text-[10px] text-gray-400">Streak</p>
-            </div>
-            <div className="text-center p-2 bg-gray-50 rounded-lg">
-              <p className="text-lg font-bold text-purple-500">{user?.longest_streak || 0}</p>
-              <p className="text-[10px] text-gray-400">Best Streak</p>
-            </div>
-          </div>
-
-          {/* Level & Badges link */}
-          {level && (
-            <Link to="/badges" className="block">
-              <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl border border-indigo-100 hover:shadow-sm transition-shadow">
-                <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-lg flex items-center justify-center text-white font-bold text-sm">
-                  {level.level}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-gray-800">{level.title}</p>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <div className="flex-1 bg-indigo-200/50 rounded-full h-1.5 overflow-hidden">
-                      <div className="bg-indigo-500 h-full rounded-full" style={{ width: `${level.progress * 100}%` }} />
-                    </div>
-                    <span className="text-[10px] text-gray-400">{level.current_xp}/{level.xp_for_next}</span>
-                  </div>
-                </div>
-                <span className="text-xs text-indigo-500 font-medium">Badges →</span>
+          {/* User Info */}
+          <Card>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-indigo-100 rounded-2xl flex items-center justify-center">
+                <span className="text-lg font-bold text-indigo-600">
+                  {(user?.display_name || user?.username || 'U')[0].toUpperCase()}
+                </span>
               </div>
-            </Link>
-          )}
-        </Card>
-
-        {/* Edit Profile */}
-        <Card className="mb-4">
-          <h3 className="text-sm font-semibold text-gray-700 mb-3">Edit Profile</h3>
-          <div className="space-y-3">
-            <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">Display Name</label>
-              <input
-                type="text"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">Degree</label>
-              <select
-                value={degree}
-                onChange={(e) => { setDegree(e.target.value); setCourse(''); }}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white"
-              >
-                <option value="">Select your degree</option>
-                {DEGREES.map((d) => (
-                  <option key={d} value={d}>{d}</option>
-                ))}
-              </select>
-            </div>
-            {degree && availableCourses.length > 0 && (
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">Course / Branch</label>
+                <p className="text-sm font-semibold text-slate-900">{user?.username}</p>
+                <p className="text-xs text-slate-400">{user?.email}</p>
+                <p className="text-[10px] text-slate-400">Member since {new Date(user?.created_at || '').toLocaleDateString()}</p>
+              </div>
+            </div>
+
+            {/* Stats */}
+            <div className="grid grid-cols-3 gap-2 mb-4">
+              <div className="text-center p-2 bg-slate-50 rounded-xl">
+                <p className="text-base font-bold text-indigo-600">{user?.total_xp?.toLocaleString() || 0}</p>
+                <p className="text-[10px] text-slate-400">Total XP</p>
+              </div>
+              <div className="text-center p-2 bg-slate-50 rounded-xl">
+                <p className="text-base font-bold text-orange-500">{user?.current_streak || 0}</p>
+                <p className="text-[10px] text-slate-400">Streak</p>
+              </div>
+              <div className="text-center p-2 bg-slate-50 rounded-xl">
+                <p className="text-base font-bold text-indigo-500">{user?.longest_streak || 0}</p>
+                <p className="text-[10px] text-slate-400">Best Streak</p>
+              </div>
+            </div>
+
+            {/* Level & Badges link */}
+            {level && (
+              <Link to="/badges" className="block">
+                <div className="flex items-center gap-3 p-3 bg-white rounded-2xl border border-slate-200/60 hover:shadow-sm transition-all duration-200">
+                  <div className="w-9 h-9 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl flex items-center justify-center text-white font-bold text-sm">
+                    {level.level}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-slate-800">{level.title}</p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <div className="flex-1 bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                        <div className="bg-indigo-500 h-full rounded-full" style={{ width: `${level.progress * 100}%` }} />
+                      </div>
+                      <span className="text-[10px] text-slate-400 tabular-nums">{level.current_xp}/{level.xp_for_next}</span>
+                    </div>
+                  </div>
+                  <span className="text-xs text-indigo-500 font-medium">Badges →</span>
+                </div>
+              </Link>
+            )}
+          </Card>
+
+          {/* Edit Profile */}
+          <Card>
+            <h3 className="text-base font-semibold text-slate-800 mb-3">Edit Profile</h3>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-slate-500 mb-1">Display Name</label>
+                <input
+                  type="text"
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-200/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-slate-900"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-500 mb-1">Degree</label>
                 <select
-                  value={course}
-                  onChange={(e) => setCourse(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white"
+                  value={degree}
+                  onChange={(e) => { setDegree(e.target.value); setCourse(''); }}
+                  className="w-full px-3 py-2 border border-slate-200/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white text-slate-900"
                 >
-                  <option value="">Select your course</option>
-                  {availableCourses.map((c) => (
-                    <option key={c} value={c}>{c}</option>
+                  <option value="">Select your degree</option>
+                  {DEGREES.map((d) => (
+                    <option key={d} value={d}>{d}</option>
                   ))}
                 </select>
               </div>
-            )}
-            <Button onClick={handleSave} disabled={saving} isLoading={saving} className="w-full">
-              {saving ? 'Saving...' : saved ? (
-                <span className="inline-flex items-center gap-1.5">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  Saved!
-                </span>
-              ) : 'Save Profile'}
-            </Button>
-          </div>
-        </Card>
-
-        {/* Settings */}
-        <Card className="mb-4">
-          <h3 className="text-sm font-semibold text-gray-700 mb-3">Settings</h3>
-          <div className="flex items-center justify-between px-1">
-            <div>
-              <p className="text-sm font-medium text-gray-800">Sound Effects</p>
-              <p className="text-xs text-gray-400">Play sounds on correct/wrong answers</p>
-            </div>
-            <button
-              onClick={() => {
-                const next = !soundOn;
-                setSoundOn(next);
-                setSoundEnabled(next);
-              }}
-              className={`relative w-11 h-6 rounded-full transition-colors ${soundOn ? 'bg-primary-500' : 'bg-gray-300'}`}
-            >
-              <span
-                className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${soundOn ? 'translate-x-5' : ''}`}
-              />
-            </button>
-          </div>
-        </Card>
-
-        {/* Reset Progress */}
-        <Card className="mb-4">
-          <h3 className="text-sm font-semibold text-gray-700 mb-1">Reset Progress</h3>
-          <p className="text-xs text-gray-400 mb-3">Start fresh on any subject. This clears all attempts and mastery data.</p>
-          <div className="space-y-2">
-            {subjects.map((s) => (
-              <div key={s.id} className="flex items-center justify-between px-3 py-2.5 bg-gray-50 rounded-lg">
+              {degree && availableCourses.length > 0 && (
                 <div>
-                  <p className="text-sm font-medium text-gray-800">{s.name}</p>
-                  <p className="text-xs text-gray-400">{Math.round(s.progress_percent)}% complete</p>
+                  <label className="block text-xs font-medium text-slate-500 mb-1">Course / Branch</label>
+                  <select
+                    value={course}
+                    onChange={(e) => setCourse(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-200/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white text-slate-900"
+                  >
+                    <option value="">Select your course</option>
+                    {availableCourses.map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
                 </div>
-                <button
-                  onClick={() => handleResetSubject(s.id, s.name)}
-                  disabled={resetting === s.id}
-                  className="text-xs font-medium text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
-                >
-                  {resetting === s.id ? 'Resetting...' : 'Reset'}
-                </button>
-              </div>
-            ))}
-          </div>
-        </Card>
+              )}
+              <Button onClick={handleSave} disabled={saving} isLoading={saving} className="w-full">
+                {saving ? 'Saving...' : saved ? (
+                  <span className="inline-flex items-center gap-1.5">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 13l4 4L19 7" />
+                    </svg>
+                    Saved!
+                  </span>
+                ) : 'Save Profile'}
+              </Button>
+            </div>
+          </Card>
 
-        {/* Logout */}
-        <Button
-          variant="danger"
-          onClick={() => { logout(); navigate('/login'); }}
-          className="w-full"
-        >
-          Log Out
-        </Button>
+          {/* Settings */}
+          <Card>
+            <h3 className="text-base font-semibold text-slate-800 mb-3">Settings</h3>
+            <div className="flex items-center justify-between px-1">
+              <div>
+                <p className="text-sm font-medium text-slate-800">Sound Effects</p>
+                <p className="text-xs text-slate-400">Play sounds on correct/wrong answers</p>
+              </div>
+              <button
+                onClick={() => {
+                  const next = !soundOn;
+                  setSoundOn(next);
+                  setSoundEnabled(next);
+                }}
+                className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${soundOn ? 'bg-indigo-500' : 'bg-slate-300'}`}
+              >
+                <span
+                  className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${soundOn ? 'translate-x-5' : ''}`}
+                />
+              </button>
+            </div>
+          </Card>
+
+          {/* Reset Progress */}
+          <Card>
+            <h3 className="text-base font-semibold text-slate-800 mb-1">Reset Progress</h3>
+            <p className="text-xs text-slate-400 mb-3">Start fresh on any subject. This clears all attempts and mastery data.</p>
+            <div className="space-y-2">
+              {subjects.map((s) => (
+                <div key={s.id} className="flex items-center justify-between px-3 py-2.5 bg-slate-50 rounded-xl">
+                  <div>
+                    <p className="text-sm font-medium text-slate-800">{s.name}</p>
+                    <p className="text-xs text-slate-400">{Math.round(s.progress_percent)}% complete</p>
+                  </div>
+                  <button
+                    onClick={() => handleResetSubject(s.id, s.name)}
+                    disabled={resetting === s.id}
+                    className="text-xs font-medium text-rose-500 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 px-3 py-1.5 rounded-xl transition-colors duration-200 disabled:opacity-50"
+                  >
+                    {resetting === s.id ? 'Resetting...' : 'Reset'}
+                  </button>
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          {/* Logout */}
+          <Button
+            variant="danger"
+            onClick={() => { logout(); navigate('/login'); }}
+            className="w-full"
+          >
+            Log Out
+          </Button>
+        </div>
       </motion.div>
     </PageContainer>
   );
