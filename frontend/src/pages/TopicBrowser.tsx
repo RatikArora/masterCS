@@ -23,7 +23,7 @@ export default function TopicBrowser() {
   useEffect(() => {
     if (!subjectId) return;
     conceptsApi.getTopics(subjectId)
-      .then((r) => setTopics(r.data))
+      .then((r) => setTopics(r.data.items))
       .finally(() => setLoading(false));
   }, [subjectId]);
 
@@ -37,7 +37,7 @@ export default function TopicBrowser() {
       setLoadingConcepts(topicId);
       try {
         const { data } = await conceptsApi.getConcepts(topicId);
-        setConcepts((prev) => ({ ...prev, [topicId]: data }));
+        setConcepts((prev) => ({ ...prev, [topicId]: data.items }));
       } finally {
         setLoadingConcepts(null);
       }
@@ -51,7 +51,7 @@ export default function TopicBrowser() {
       await authApi.resetTopicProgress(topicId);
       // Refresh topics
       const { data } = await conceptsApi.getTopics(subjectId!);
-      setTopics(data);
+      setTopics(data.items);
       // Clear cached concepts for this topic
       setConcepts((prev) => { const copy = { ...prev }; delete copy[topicId]; return copy; });
     } catch {

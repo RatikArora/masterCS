@@ -51,7 +51,7 @@ export default function Dashboard() {
   useEffect(() => {
     if (subjects.length > 0) {
       progressApi.getWeakAreas(subjects[0].id)
-        .then((r) => setWeakAreas(r.data.slice(0, 3)))
+        .then((r) => setWeakAreas((r.data.items || []).slice(0, 3)))
         .catch(() => {});
     }
   }, [subjects]);
@@ -140,7 +140,7 @@ export default function Dashboard() {
                   <div className="flex-1 bg-indigo-200/50 rounded-full h-1.5 overflow-hidden">
                     <div
                       className="bg-indigo-500 h-full rounded-full transition-all"
-                      style={{ width: `${level.progress}%` }}
+                      style={{ width: `${level.progress * 100}%` }}
                     />
                   </div>
                   <span className="text-[10px] text-gray-400">{level.current_xp}/{level.xp_for_next}</span>

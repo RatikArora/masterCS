@@ -88,7 +88,7 @@ def get_overview(
 
     total_answered = int(attempt_stats[0] or 0)
     total_correct = int(attempt_stats[1] or 0)
-    accuracy = (total_correct / total_answered * 100) if total_answered > 0 else 0.0
+    accuracy = min((total_correct / total_answered * 100), 100.0) if total_answered > 0 else 0.0
 
     # Include both unstarted concepts and started-but-novice in novice count
     novice_from_progress = int(progress_stats[2] or 0)
@@ -161,14 +161,15 @@ def get_topic_progress(
     ]
 
 
-@router.get("/weak-areas/{subject_id}", response_model=list[WeakAreaResponse])
+@router.get("/weak-areas/{subject_id}", response_model=PaginatedResponse[WeakAreaResponse])
 def get_weak_areas(
     subject_id: str,
+    pagination: PaginationParams = Depends(),
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    """Weak areas — single joined query."""
-    rows = (
+    """Weak areas — paginated, single joined query."""
+    base_query = (
         db.query(UserConceptProgress, Concept.name, Topic.name)
         .join(Concept, UserConceptProgress.concept_id == Concept.id)
         .join(Topic, Concept.topic_id == Topic.id)
@@ -179,14 +180,15 @@ def get_weak_areas(
             UserConceptProgress.exposure_count > 0,
         )
         .order_by(UserConceptProgress.confidence_score.asc())
-        .limit(10)
-        .all()
     )
 
-    result = []
+    total = base_query.count()
+    rows = base_query.offset(pagination.offset).limit(pagination.page_size).all()
+
+    items = []
     for progress, concept_name, topic_name in rows:
-        total = progress.correct_count + progress.incorrect_count
-        accuracy = (progress.correct_count / total * 100) if total > 0 else 0.0
+        total_attempts = progress.correct_count + progress.incorrect_count
+        accuracy = min((progress.correct_count / total_attempts * 100), 100.0) if total_attempts > 0 else 0.0
 
         if progress.error_streak >= 3:
             action = "Needs immediate review — multiple consecutive errors"
@@ -195,7 +197,7 @@ def get_weak_areas(
         else:
             action = "Practice more questions on this topic"
 
-        result.append(WeakAreaResponse(
+        items.append(WeakAreaResponse(
             concept_id=progress.concept_id,
             concept_name=concept_name,
             topic_name=topic_name,
@@ -204,7 +206,8 @@ def get_weak_areas(
             accuracy=round(accuracy, 1),
             recommended_action=action,
         ))
-    return result
+
+    return PaginatedResponse.create(items, total, pagination)
 
 
 @router.get("/daily-stats", response_model=PaginatedResponse[DailyStatsResponse])

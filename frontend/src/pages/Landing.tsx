@@ -85,7 +85,7 @@ export default function Landing() {
               transition={{ delay: 0.2 + i * 0.1 }}
               className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm"
             >
-              <div className="w-10 h-10 bg-primary-50 rounded-xl flex items-center justify-center mb-3">
+              <div className="w-10 h-10 bg-primary-100 rounded-xl flex items-center justify-center mb-3">
                 {f.icon}
               </div>
               <h3 className="font-semibold text-gray-900 mb-1">{f.title}</h3>

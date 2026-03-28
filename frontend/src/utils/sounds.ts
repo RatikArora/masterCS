@@ -1,9 +1,30 @@
 /**
  * Subtle sound effects using Web Audio API — no external files needed.
  * Each sound is a short synthesized tone.
+ * Respects user's sound preference stored in localStorage.
  */
 
 let audioCtx: AudioContext | null = null;
+
+const SOUND_KEY = 'mastercs_sounds_enabled';
+
+function isSoundEnabled(): boolean {
+  try {
+    return localStorage.getItem(SOUND_KEY) !== 'false';
+  } catch {
+    return true;
+  }
+}
+
+export function setSoundEnabled(enabled: boolean): void {
+  try {
+    localStorage.setItem(SOUND_KEY, String(enabled));
+  } catch { /* ignore */ }
+}
+
+export function getSoundEnabled(): boolean {
+  return isSoundEnabled();
+}
 
 function getCtx(): AudioContext {
   if (!audioCtx) audioCtx = new AudioContext();
@@ -11,6 +32,7 @@ function getCtx(): AudioContext {
 }
 
 function playTone(freq: number, duration: number, type: OscillatorType = 'sine', volume = 0.12) {
+  if (!isSoundEnabled()) return;
   try {
     const ctx = getCtx();
     const osc = ctx.createOscillator();

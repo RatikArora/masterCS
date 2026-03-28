@@ -5,6 +5,7 @@ import { useAuthStore } from '../store/authStore';
 import { authApi } from '../api/auth';
 import { conceptsApi, type SubjectResponse } from '../api/concepts';
 import { badgesApi, type LevelInfo } from '../api/badges';
+import { getSoundEnabled, setSoundEnabled } from '../utils/sounds';
 import PageContainer from '../components/layout/PageContainer';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
@@ -33,6 +34,7 @@ export default function ProfilePage() {
   const [subjects, setSubjects] = useState<SubjectResponse[]>([]);
   const [resetting, setResetting] = useState<string | null>(null);
   const [level, setLevel] = useState<LevelInfo | null>(null);
+  const [soundOn, setSoundOn] = useState(getSoundEnabled());
 
   useEffect(() => {
     conceptsApi.getSubjects().then((r) => setSubjects(r.data)).catch(() => {});
@@ -124,7 +126,7 @@ export default function ProfilePage() {
                   <p className="text-sm font-semibold text-gray-800">{level.title}</p>
                   <div className="flex items-center gap-2 mt-0.5">
                     <div className="flex-1 bg-indigo-200/50 rounded-full h-1.5 overflow-hidden">
-                      <div className="bg-indigo-500 h-full rounded-full" style={{ width: `${level.progress}%` }} />
+                      <div className="bg-indigo-500 h-full rounded-full" style={{ width: `${level.progress * 100}%` }} />
                     </div>
                     <span className="text-[10px] text-gray-400">{level.current_xp}/{level.xp_for_next}</span>
                   </div>
@@ -176,9 +178,39 @@ export default function ProfilePage() {
                 </select>
               </div>
             )}
-            <Button onClick={handleSave} disabled={saving} className="w-full">
-              {saving ? 'Saving...' : saved ? '✓ Saved!' : 'Save Profile'}
+            <Button onClick={handleSave} disabled={saving} isLoading={saving} className="w-full">
+              {saving ? 'Saving...' : saved ? (
+                <span className="inline-flex items-center gap-1.5">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Saved!
+                </span>
+              ) : 'Save Profile'}
             </Button>
+          </div>
+        </Card>
+
+        {/* Settings */}
+        <Card className="mb-4">
+          <h3 className="text-sm font-semibold text-gray-700 mb-3">Settings</h3>
+          <div className="flex items-center justify-between px-1">
+            <div>
+              <p className="text-sm font-medium text-gray-800">Sound Effects</p>
+              <p className="text-xs text-gray-400">Play sounds on correct/wrong answers</p>
+            </div>
+            <button
+              onClick={() => {
+                const next = !soundOn;
+                setSoundOn(next);
+                setSoundEnabled(next);
+              }}
+              className={`relative w-11 h-6 rounded-full transition-colors ${soundOn ? 'bg-primary-500' : 'bg-gray-300'}`}
+            >
+              <span
+                className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${soundOn ? 'translate-x-5' : ''}`}
+              />
+            </button>
           </div>
         </Card>
 
@@ -206,12 +238,13 @@ export default function ProfilePage() {
         </Card>
 
         {/* Logout */}
-        <button
+        <Button
+          variant="danger"
           onClick={() => { logout(); navigate('/login'); }}
-          className="w-full py-3 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition-colors"
+          className="w-full"
         >
           Log Out
-        </button>
+        </Button>
       </motion.div>
     </PageContainer>
   );

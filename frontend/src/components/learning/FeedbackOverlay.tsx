@@ -8,21 +8,46 @@ import { sounds } from '../../utils/sounds';
 interface FeedbackOverlayProps {
   result: AnswerResult;
   onContinue: () => void;
+  hotStreak?: number;
 }
 
-export default function FeedbackOverlay({ result, onContinue }: FeedbackOverlayProps) {
+const HOT_STREAK_MESSAGES = [
+  '', '', '',
+  'Hat trick!',
+  'On fire!',
+  'Unstoppable!',
+  'Dominating!',
+  'Legendary!',
+  'GODLIKE!',
+  'Beyond Mortal!',
+  'PERFECTION!',
+];
+
+function getStreakMessage(count: number): string {
+  if (count < 3) return '';
+  return HOT_STREAK_MESSAGES[Math.min(count, HOT_STREAK_MESSAGES.length - 1)];
+}
+
+export default function FeedbackOverlay({ result, onContinue, hotStreak = 0 }: FeedbackOverlayProps) {
   const [showLesson, setShowLesson] = useState(false);
+  const streakMsg = getStreakMessage(hotStreak);
 
   useEffect(() => {
     if (result.is_correct) {
-      sounds.correct();
+      if (hotStreak >= 5) {
+        sounds.complete();
+      } else if (hotStreak >= 3) {
+        sounds.streak();
+      } else {
+        sounds.correct();
+      }
       if (result.level_up) {
         setTimeout(() => sounds.levelUp(), 400);
       }
     } else {
       sounds.wrong();
     }
-  }, [result]);
+  }, [result, hotStreak]);
 
   return (
     <AnimatePresence>
@@ -83,6 +108,29 @@ export default function FeedbackOverlay({ result, onContinue }: FeedbackOverlayP
           >
             <p className="text-lg font-bold text-purple-700">Level Up!</p>
             <p className="text-xs text-purple-500">Keep going — you're getting stronger!</p>
+          </motion.div>
+        )}
+
+        {/* Hot streak celebration (3+ correct in a row) */}
+        {hotStreak >= 3 && result.is_correct && streakMsg && (
+          <motion.div
+            initial={{ scale: 0.5, opacity: 0, rotate: -5 }}
+            animate={{ scale: 1, opacity: 1, rotate: 0 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 15 }}
+            className={`mb-3 p-3 rounded-xl border text-center ${
+              hotStreak >= 7
+                ? 'bg-gradient-to-r from-amber-100 via-orange-100 to-red-100 border-orange-300'
+                : hotStreak >= 5
+                  ? 'bg-gradient-to-r from-orange-50 to-amber-50 border-amber-200'
+                  : 'bg-gradient-to-r from-blue-50 to-cyan-50 border-blue-200'
+            }`}
+          >
+            <p className={`text-lg font-black ${
+              hotStreak >= 7 ? 'text-orange-600' : hotStreak >= 5 ? 'text-amber-600' : 'text-blue-600'
+            }`}>
+              {streakMsg}
+            </p>
+            <p className="text-xs text-gray-500 mt-0.5">{hotStreak} correct in a row</p>
           </motion.div>
         )}
 

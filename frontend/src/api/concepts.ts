@@ -43,15 +43,25 @@ export interface ConceptDetailResponse extends ConceptResponse {
   accuracy: number;
 }
 
+export interface PaginatedResponse<T> {
+  items: T[];
+  total: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+  has_next: boolean;
+  has_prev: boolean;
+}
+
 export const conceptsApi = {
   getSubjects: () =>
     api.get<SubjectResponse[]>('/concepts/subjects'),
 
   getTopics: (subjectId: string) =>
-    api.get<TopicResponse[]>(`/concepts/subjects/${subjectId}/topics`),
+    api.get<PaginatedResponse<TopicResponse>>(`/concepts/subjects/${subjectId}/topics?page_size=100`),
 
   getConcepts: (topicId: string) =>
-    api.get<ConceptResponse[]>(`/concepts/topics/${topicId}/concepts`),
+    api.get<PaginatedResponse<ConceptResponse>>(`/concepts/topics/${topicId}/concepts?page_size=100`),
 
   getConceptDetail: (conceptId: string) =>
     api.get<ConceptDetailResponse>(`/concepts/concept/${conceptId}`),

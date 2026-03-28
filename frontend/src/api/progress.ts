@@ -56,7 +56,7 @@ export const progressApi = {
     api.get<TopicProgress[]>(`/progress/topics/${subjectId}`),
 
   getWeakAreas: (subjectId: string) =>
-    api.get<WeakArea[]>(`/progress/weak-areas/${subjectId}`),
+    api.get<{ items: WeakArea[]; total: number; page: number; page_size: number }>(`/progress/weak-areas/${subjectId}?page_size=100`),
 
   getDailyStats: (days = 30) =>
     api.get<{ items: DailyStats[]; total: number }>(`/progress/daily-stats?days=${days}`),

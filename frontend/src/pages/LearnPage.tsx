@@ -23,7 +23,7 @@ export default function LearnPage() {
   const [loadingNotes, setLoadingNotes] = useState(false);
 
   const {
-    session, result, isLoadingQuestion, isSubmitting, showFeedback, error,
+    session, result, isLoadingQuestion, isSubmitting, showFeedback, error, hotStreak,
     fetchNextQuestion, submitAnswer, dismissFeedback,
   } = useLearningStore();
 
@@ -269,7 +269,7 @@ export default function LearnPage() {
             animate={{ opacity: 1, y: 0 }}
             className="mt-4"
           >
-            <FeedbackOverlay result={result} onContinue={handleContinue} />
+            <FeedbackOverlay result={result} onContinue={handleContinue} hotStreak={hotStreak} />
           </motion.div>
         )}
       </AnimatePresence>

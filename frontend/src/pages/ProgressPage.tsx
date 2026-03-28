@@ -12,7 +12,11 @@ import Loading from '../components/ui/Loading';
 import RichText from '../components/ui/RichText';
 
 const masteryColors: Record<string, string> = {
-  novice: '#9ca3af', learning: '#3b82f6', familiar: '#f59e0b', proficient: '#22c55e', mastered: '#8b5cf6',
+  novice: 'var(--color-gray-400, #9ca3af)',
+  learning: 'var(--color-primary-500, #3b82f6)',
+  familiar: 'var(--color-warning, #f59e0b)',
+  proficient: 'var(--color-success, #22c55e)',
+  mastered: '#8b5cf6',
 };
 const masteryLabels: Record<string, string> = {
   novice: 'Not Started', learning: 'Learning', familiar: 'Familiar', proficient: 'Proficient', mastered: 'Mastered',
@@ -75,7 +79,7 @@ export default function ProgressPage() {
     Promise.all([
       progressApi.getOverview(sid).then((r) => setOverview(r.data)).catch(() => {}),
       progressApi.getTopicProgress(sid).then((r) => setTopics(r.data)).catch(() => {}),
-      progressApi.getWeakAreas(sid).then((r) => setWeakAreas(r.data)).catch(() => {}),
+      progressApi.getWeakAreas(sid).then((r) => setWeakAreas(r.data.items)).catch(() => {}),
       learningApi.getWrongQuestions(sid, 1, 20).then((r) => setWrongQuestions(r.data.items)).catch(() => {}),
       progressApi.getDailyStats(14).then((r) => setDailyStats(r.data.items)).catch(() => {}),
     ]).finally(() => setLoading(false));
@@ -213,6 +217,43 @@ export default function ProgressPage() {
               <p className="text-[9px] text-gray-300 mt-0.5">{totalAnswered} questions</p>
             </Card>
           </div>
+
+          {/* Topic-wise Breakdown */}
+          {topics.length > 0 && (
+            <Card className="mb-6">
+              <h3 className="text-sm font-semibold text-gray-700 mb-3">Topic Breakdown</h3>
+              <div className="space-y-3">
+                {topics.map((t) => {
+                  const pct = Math.round(t.mastery_percent);
+                  const conf = Math.round(t.avg_confidence * 100);
+                  return (
+                    <div key={t.topic_id}>
+                      <div className="flex items-center justify-between mb-1">
+                        <p className="text-xs font-medium text-gray-700 truncate flex-1">{t.topic_name}</p>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] text-gray-400">{t.mastered_concepts}/{t.total_concepts}</span>
+                          <span className="text-[10px] font-semibold text-gray-600">{pct}%</span>
+                        </div>
+                      </div>
+                      <div className="flex gap-1 h-2 rounded-full overflow-hidden bg-gray-100">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${pct}%` }}
+                          transition={{ duration: 0.6, ease: 'easeOut' }}
+                          className={`h-full rounded-full ${
+                            pct >= 80 ? 'bg-green-400' : pct >= 50 ? 'bg-amber-400' : pct >= 20 ? 'bg-blue-400' : 'bg-gray-300'
+                          }`}
+                        />
+                      </div>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-[9px] text-gray-400">{conf}% confidence</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </Card>
+          )}
 
           {/* Weak Areas */}
           {weakAreas.length > 0 && (

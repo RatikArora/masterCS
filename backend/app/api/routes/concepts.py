@@ -6,6 +6,7 @@ from sqlalchemy import func, case
 
 from app.db.session import get_db
 from app.api.dependencies import get_current_user
+from app.core.pagination import PaginationParams, PaginatedResponse, paginate_query
 from app.models.user import User
 from app.models.subject import Subject, Topic
 from app.models.concept import Concept
@@ -95,22 +96,23 @@ def list_subjects(
     ]
 
 
-@router.get("/subjects/{subject_id}/topics", response_model=list[TopicResponse])
+@router.get("/subjects/{subject_id}/topics", response_model=PaginatedResponse[TopicResponse])
 def list_topics(
     subject_id: str,
+    pagination: PaginationParams = Depends(),
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    """List topics with concept count and mastery — two queries max, no N+1."""
-    from app.models.question import Question
-    topics = (
+    """List topics with concept count and mastery — paginated, no N+1."""
+    base_query = (
         db.query(Topic)
         .filter(Topic.subject_id == subject_id)
         .order_by(Topic.order_index)
-        .all()
     )
+    topics, total = paginate_query(base_query, pagination)
+
     if not topics:
-        return []
+        return PaginatedResponse.create([], total, pagination)
 
     topic_ids = [t.id for t in topics]
 
@@ -150,7 +152,7 @@ def list_topics(
     )
     q_map = {tid: cnt for tid, cnt in q_counts}
 
-    return [
+    items = [
         TopicResponse(
             id=t.id, subject_id=t.subject_id, name=t.name,
             description=t.description, icon=t.icon, order_index=t.order_index,
@@ -164,15 +166,18 @@ def list_topics(
         for t in topics
     ]
 
+    return PaginatedResponse.create(items, total, pagination)
 
-@router.get("/topics/{topic_id}/concepts", response_model=list[ConceptResponse])
+
+@router.get("/topics/{topic_id}/concepts", response_model=PaginatedResponse[ConceptResponse])
 def list_concepts(
     topic_id: str,
+    pagination: PaginationParams = Depends(),
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    """List concepts with user progress — single LEFT JOIN query."""
-    rows = (
+    """List concepts with user progress — paginated, single LEFT JOIN query."""
+    base_query = (
         db.query(Concept, UserConceptProgress)
         .outerjoin(
             UserConceptProgress,
@@ -180,10 +185,12 @@ def list_concepts(
         )
         .filter(Concept.topic_id == topic_id)
         .order_by(Concept.order_index)
-        .all()
     )
 
-    return [
+    total = base_query.count()
+    rows = base_query.offset(pagination.offset).limit(pagination.page_size).all()
+
+    items = [
         ConceptResponse(
             id=c.id, topic_id=c.topic_id, name=c.name,
             explanation=c.explanation, key_points=c.key_points,
@@ -193,6 +200,8 @@ def list_concepts(
         )
         for c, p in rows
     ]
+
+    return PaginatedResponse.create(items, total, pagination)
 
 
 @router.get("/concept/{concept_id}", response_model=ConceptDetailResponse)
