@@ -90,6 +90,31 @@ def get_overview(
     total_correct = int(attempt_stats[1] or 0)
     accuracy = min((total_correct / total_answered * 100), 100.0) if total_answered > 0 else 0.0
 
+    # Calculate subject-specific XP from attempts
+    # Use stored xp_earned if available, otherwise estimate from difficulty
+    subject_xp = (
+        db.query(
+            func.coalesce(
+                func.sum(
+                    case(
+                        (UserQuestionAttempt.xp_earned > 0, UserQuestionAttempt.xp_earned),
+                        (UserQuestionAttempt.is_correct == False, 2),
+                        (UserQuestionAttempt.difficulty_at_time == 1, 10),
+                        (UserQuestionAttempt.difficulty_at_time == 2, 20),
+                        (UserQuestionAttempt.difficulty_at_time == 3, 35),
+                        else_=10,
+                    )
+                ),
+                0,
+            )
+        )
+        .filter(
+            UserQuestionAttempt.user_id == user.id,
+            UserQuestionAttempt.concept_id.in_(subject_concept_ids.select()),
+        )
+        .scalar()
+    ) or 0
+
     # Include both unstarted concepts and started-but-novice in novice count
     novice_from_progress = int(progress_stats[2] or 0)
     distribution = {
@@ -108,7 +133,7 @@ def get_overview(
         overall_accuracy=round(accuracy, 1),
         current_streak=user.current_streak,
         longest_streak=user.longest_streak,
-        total_xp=user.total_xp,
+        total_xp=int(subject_xp),
         mastery_distribution=distribution,
     )
 

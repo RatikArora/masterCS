@@ -130,6 +130,9 @@ class MasteryTracker:
             question_id=question.id,
         )
 
+        # Store XP on the attempt for per-subject tracking
+        attempt.xp_earned = xp
+
         # Detect level-up before adding XP
         old_xp = (self.db.query(User).filter(User.id == self.user_id).first()).total_xp or 0
         old_level = _xp_level(old_xp)

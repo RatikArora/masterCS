@@ -442,7 +442,7 @@ export default function ProgressPage() {
               </div>
               <MiniBar data={dailyStats.slice(-14)} />
               <div className="flex justify-between mt-1 text-[9px] text-slate-400">
-                <span>{dailyStats[0]?.date.slice(5)}</span>
+                <span>{(() => { const d = new Date(dailyStats[0]?.date); return `${d.getDate()} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]}`; })()}</span>
                 <span>Today</span>
               </div>
             </Card>

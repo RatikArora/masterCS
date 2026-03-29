@@ -51,6 +51,7 @@ class UserQuestionAttempt(Base):
     is_correct = Column(Boolean, nullable=False)
     response_time_ms = Column(Integer, default=0)
     difficulty_at_time = Column(Integer, default=1)
+    xp_earned = Column(Integer, default=0)
     attempted_at = Column(DateTime, server_default=func.now())
 
     __table_args__ = (
