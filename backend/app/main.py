@@ -19,10 +19,13 @@ def create_app() -> FastAPI:
         description="Adaptive CS Learning System with Spaced Repetition",
     )
 
-    # CORS — allow frontend
+    # CORS — allow frontend (dev + production via nginx same-origin)
+    import os
+    extra_origins = os.getenv("ALLOWED_ORIGINS", "").split(",")
+    origins = ["http://localhost:5173", "http://localhost:3000"] + [o for o in extra_origins if o]
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["http://localhost:5173", "http://localhost:3000"],
+        allow_origins=origins,
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
