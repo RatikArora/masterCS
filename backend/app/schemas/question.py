@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class QuestionResponse(BaseModel):
@@ -20,7 +20,7 @@ class QuestionResponse(BaseModel):
 class AnswerSubmit(BaseModel):
     question_id: str
     selected_answer: str
-    response_time_ms: int
+    response_time_ms: int = Field(gt=0, le=3600000)
 
 
 class AnswerResult(BaseModel):

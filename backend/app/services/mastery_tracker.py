@@ -56,6 +56,22 @@ class MasteryTracker:
         Process a user's answer: update progress, SR params, mastery, XP, streaks.
         Returns a result dict for the API response.
         """
+        try:
+            return self._process_answer_inner(
+                question, concept_id, selected_answer, is_correct, response_time_ms
+            )
+        except Exception:
+            self.db.rollback()
+            raise
+
+    def _process_answer_inner(
+        self,
+        question,
+        concept_id: str,
+        selected_answer: str,
+        is_correct: bool,
+        response_time_ms: int,
+    ) -> dict:
         # Get or create concept progress
         progress = self._get_or_create_progress(concept_id)
 
@@ -111,6 +127,14 @@ class MasteryTracker:
             progress.correct_count, total,
         )
 
+        # Calculate XP (with decay for repeated questions and mastery cap)
+        # Must be calculated BEFORE adding attempt to session to avoid off-by-one
+        xp = self._calculate_xp(
+            question.difficulty, is_correct, progress.correct_streak,
+            mastery_level=progress.mastery_level,
+            question_id=question.id,
+        )
+
         # Record attempt
         attempt = UserQuestionAttempt(
             id=str(uuid.uuid4()),
@@ -123,13 +147,6 @@ class MasteryTracker:
             difficulty_at_time=question.difficulty,
         )
         self.db.add(attempt)
-
-        # Calculate XP (with decay for repeated questions and mastery cap)
-        xp = self._calculate_xp(
-            question.difficulty, is_correct, progress.correct_streak,
-            mastery_level=progress.mastery_level,
-            question_id=question.id,
-        )
 
         # Store XP on the attempt for per-subject tracking
         attempt.xp_earned = xp
