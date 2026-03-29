@@ -35,13 +35,11 @@ export default function Dashboard() {
     setLoading(true);
     Promise.all([
       conceptsApi.getSubjects().then((r) => setSubjects(r.data)),
-      progressApi.getStreak().then((r) => setStreak(r.data)),
+      progressApi.getStreak().then((r) => {
+        setStreak(r.data);
+        setTodayXP(r.data.xp_today || 0);
+      }),
       badgesApi.getBadges().then((r) => setLevel(r.data.level)).catch(() => {}),
-      progressApi.getDailyStats(1).then((r) => {
-        const items = r.data.items || r.data;
-        const today = Array.isArray(items) && items.length > 0 ? items[items.length - 1] : null;
-        if (today) setTodayXP(today.xp_earned || 0);
-      }).catch(() => {}),
     ]).finally(() => setLoading(false));
   };
 

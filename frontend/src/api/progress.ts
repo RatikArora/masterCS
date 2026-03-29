@@ -46,6 +46,7 @@ export interface StreakInfo {
   today_completed: boolean;
   daily_goal: number;
   questions_today: number;
+  xp_today: number;
 }
 
 export const progressApi = {

@@ -63,3 +63,4 @@ class StreakResponse(BaseModel):
     today_completed: bool
     daily_goal: int
     questions_today: int
+    xp_today: int = 0

@@ -285,4 +285,5 @@ def get_streak(
         today_completed=(today_stats.questions_answered >= DAILY_GOAL) if today_stats else False,
         daily_goal=DAILY_GOAL,
         questions_today=today_stats.questions_answered if today_stats else 0,
+        xp_today=today_stats.xp_earned if today_stats else 0,
     )

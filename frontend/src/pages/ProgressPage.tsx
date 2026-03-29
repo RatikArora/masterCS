@@ -349,20 +349,41 @@ export default function ProgressPage() {
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
         {/* Subject Switcher */}
         {allSubjects.length > 1 && (
-          <div className="flex gap-2 mb-5 overflow-x-auto pb-1 -mx-1 px-1">
+          <div className="grid gap-2 mb-6" style={{ gridTemplateColumns: `repeat(${Math.min(allSubjects.length, 3)}, 1fr)` }}>
             {allSubjects.map((s) => {
               const isActive = s.id === subjectId;
+              const ov = allOverviews[s.id];
+              const pct = ov ? Math.round((ov.concepts_mastered / Math.max(ov.total_concepts, 1)) * 100) : 0;
+              const answered = ov?.total_questions_answered || 0;
               return (
                 <button
                   key={s.id}
                   onClick={() => { if (!isActive) setSearchParams({ subject: s.id }, { replace: true }); }}
-                  className={`flex-shrink-0 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 border ${
+                  className={`relative text-left px-3.5 py-3 rounded-2xl border transition-all duration-200 ${
                     isActive
-                      ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm shadow-indigo-600/20'
-                      : 'bg-white text-slate-600 border-slate-200/60 hover:border-indigo-200 hover:text-indigo-600'
+                      ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-600/20'
+                      : 'bg-white text-slate-700 border-slate-200/60 hover:border-indigo-200 hover:shadow-sm'
                   }`}
                 >
-                  {s.name}
+                  <p className={`text-xs font-semibold leading-tight mb-1 ${isActive ? 'text-white' : 'text-slate-800'}`}>
+                    {s.name}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <div className={`flex-1 h-1 rounded-full ${isActive ? 'bg-indigo-500' : 'bg-slate-100'}`}>
+                      <div
+                        className={`h-full rounded-full ${isActive ? 'bg-white/70' : 'bg-indigo-400'}`}
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                    <span className={`text-[10px] font-medium tabular-nums ${isActive ? 'text-indigo-200' : 'text-slate-400'}`}>
+                      {pct}%
+                    </span>
+                  </div>
+                  {answered > 0 && (
+                    <p className={`text-[9px] mt-1 ${isActive ? 'text-indigo-200' : 'text-slate-400'}`}>
+                      {answered} answered
+                    </p>
+                  )}
                 </button>
               );
             })}
