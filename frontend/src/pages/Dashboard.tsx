@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Globe, Building2, ChevronRight, Zap, AlertTriangle, ArrowRight } from 'lucide-react';
+import { Globe, Building2, ChevronRight, Zap, AlertTriangle, ArrowRight, Network, Cpu, Code2, BookOpen, Calculator } from 'lucide-react';
 import { conceptsApi, type SubjectResponse } from '../api/concepts';
 import { progressApi, type StreakInfo, type WeakArea, type DailyStats } from '../api/progress';
 import { badgesApi, type LevelInfo } from '../api/badges';
@@ -19,6 +19,17 @@ const DEGREE_OPTIONS = [
   { value: 'M.Tech', label: 'M.Tech', desc: 'Postgrad Engineering' },
   { value: 'M.Arch', label: 'M.Arch', desc: 'Postgrad Architecture' },
 ];
+
+function getSubjectIcon(name: string, size = 18) {
+  const n = name.toLowerCase();
+  const cls = "text-indigo-500";
+  if (n.includes('architecture')) return <Building2 size={size} strokeWidth={1.5} className={cls} />;
+  if (n.includes('network')) return <Network size={size} strokeWidth={1.5} className={cls} />;
+  if (n.includes('algorithm')) return <Cpu size={size} strokeWidth={1.5} className={cls} />;
+  if (n.includes('programming') || n.includes('data structure')) return <Code2 size={size} strokeWidth={1.5} className={cls} />;
+  if (n.includes('aptitude')) return <Calculator size={size} strokeWidth={1.5} className={cls} />;
+  return <BookOpen size={size} strokeWidth={1.5} className={cls} />;
+}
 
 export default function Dashboard() {
   const { user, updateProfile, refreshUser } = useAuthStore();
@@ -54,9 +65,17 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (subjects.length > 0) {
-      progressApi.getWeakAreas(subjects[0].id)
-        .then((r) => setWeakAreas((r.data.items || []).slice(0, 3)))
-        .catch(() => {});
+      // Load weak areas from ALL subjects, not just the first one
+      Promise.all(
+        subjects.map((s) =>
+          progressApi.getWeakAreas(s.id)
+            .then((r) => (r.data.items || []).map((w: WeakArea) => ({ ...w, subject_id: s.id, subject_name: s.name })))
+            .catch(() => [] as WeakArea[])
+        )
+      ).then((results) => {
+        const all = results.flat().sort((a, b) => a.confidence_score - b.confidence_score);
+        setWeakAreas(all.slice(0, 5));
+      });
     }
   }, [subjects]);
 
@@ -189,11 +208,7 @@ export default function Dashboard() {
                 <Card hover onClick={() => navigate(`/topics?subject=${subject.id}`)}>
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center flex-shrink-0">
-                      {subject.name.toLowerCase().includes('architecture') ? (
-                        <Building2 size={18} strokeWidth={1.5} className="text-indigo-500" />
-                      ) : (
-                        <Globe size={18} strokeWidth={1.5} className="text-indigo-500" />
-                      )}
+                      {getSubjectIcon(subject.name)}
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="text-sm font-semibold text-slate-900">{subject.name}</h3>
@@ -236,20 +251,22 @@ export default function Dashboard() {
           >
             <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3">Needs Practice</h2>
             <div className="space-y-2">
-              {weakAreas.map((area) => (
+              {weakAreas.map((area: any) => (
                 <button
                   key={area.concept_id}
-                  onClick={() => navigate(`/learn?subject=${subjects[0]?.id}&concept=${area.concept_id}`)}
-                  className="w-full flex items-center gap-3 px-4 py-3 bg-white rounded-2xl border border-slate-200/60 hover:border-indigo-200 hover:shadow-sm transition-all duration-200 text-left"
+                  onClick={() => navigate(`/learn?subject=${area.subject_id || subjects[0]?.id}&concept=${area.concept_id}`)}
+                  className="w-full flex items-center gap-3 px-4 py-3 bg-white rounded-2xl border border-slate-200/60 hover:border-amber-200 hover:shadow-sm transition-all duration-200 text-left"
                 >
                   <div className="w-8 h-8 bg-amber-50 rounded-xl flex items-center justify-center flex-shrink-0">
                     <AlertTriangle size={14} strokeWidth={1.5} className="text-amber-500" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-slate-800 truncate">{area.concept_name}</p>
-                    <p className="text-[11px] text-slate-400">{area.topic_name} · {Math.round(area.accuracy)}% accuracy</p>
+                    <p className="text-[11px] text-slate-400">
+                      {area.subject_name ? `${area.subject_name} · ` : ''}{area.topic_name} · {Math.round(area.accuracy)}% accuracy
+                    </p>
                   </div>
-                  <span className="text-[10px] text-indigo-500 font-medium flex-shrink-0">{area.recommended_action}</span>
+                  <ChevronRight size={14} strokeWidth={1.5} className="text-slate-300 flex-shrink-0" />
                 </button>
               ))}
             </div>
