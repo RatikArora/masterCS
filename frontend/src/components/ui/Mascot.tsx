@@ -1,4 +1,4 @@
-import { motion, useMotionValue, useTransform } from 'framer-motion';
+import { motion, useMotionValue, useTransform, type Variants } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
 
 export type MascotMood =
@@ -73,7 +73,7 @@ export default function Mascot({
     return () => window.removeEventListener('mousemove', handler);
   }, [mouseX, mouseY]);
 
-  const bodyAnim: Record<MascotMood, object> = {
+  const bodyAnim: Variants = {
     idle:         { y: [0, -1.5, 0], transition: { repeat: Infinity, duration: 4, ease: 'easeInOut' } },
     happy:        { y: [0, -3, 0], transition: { repeat: Infinity, duration: 1.2, ease: 'easeInOut' } },
     thinking:     { rotate: [-1, 1, -1], transition: { repeat: Infinity, duration: 3, ease: 'easeInOut' } },

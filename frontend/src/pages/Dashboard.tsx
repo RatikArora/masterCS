@@ -1,14 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Globe, Building2, ChevronRight, Zap, AlertTriangle, ArrowRight, Network, Cpu, Code2, BookOpen, Calculator } from 'lucide-react';
+import { Building2, ChevronRight, AlertTriangle, ArrowRight, Network, Cpu, Code2, BookOpen, Calculator } from 'lucide-react';
 import { conceptsApi, type SubjectResponse } from '../api/concepts';
-import { progressApi, type StreakInfo, type WeakArea, type DailyStats } from '../api/progress';
+import { progressApi, type StreakInfo, type WeakArea } from '../api/progress';
 import { badgesApi, type LevelInfo } from '../api/badges';
 import { useAuthStore } from '../store/authStore';
 import PageContainer from '../components/layout/PageContainer';
 import Card from '../components/ui/Card';
-import Mascot from '../components/ui/Mascot';
 import MascotGuide from '../components/ui/MascotGuide';
 import StreakCounter from '../components/progress/StreakCounter';
 import XPBar from '../components/progress/XPBar';
@@ -159,8 +158,10 @@ export default function Dashboard() {
         >
           <div className="flex items-center gap-2">
             <StreakCounter count={streak?.current_streak || 0} isActive={streak?.today_completed} />
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-indigo-50 text-indigo-600 border border-indigo-100">
-              <Zap size={12} strokeWidth={1.5} />
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold bg-gradient-to-r from-indigo-50 to-violet-50 text-indigo-600 border border-indigo-200/70 shadow-sm">
+              <svg className="w-4 h-4 text-indigo-500" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
+              </svg>
               <span className="tabular-nums">{(user?.total_xp || 0).toLocaleString()} XP</span>
             </div>
           </div>

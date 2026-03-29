@@ -11,6 +11,7 @@ import ProgressRing from '../components/progress/ProgressRing';
 import MasteryBadge from '../components/progress/MasteryBadge';
 import Loading from '../components/ui/Loading';
 import MascotGuide from '../components/ui/MascotGuide';
+import RichText from '../components/ui/RichText';
 
 const masteryColors: Record<string, string> = {
   novice: 'var(--color-gray-400, #9ca3af)',

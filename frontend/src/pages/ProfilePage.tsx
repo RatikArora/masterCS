@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { User, Save, Check, Volume2, VolumeX, LogOut, RotateCcw, ChevronRight, Award } from 'lucide-react';
+import { Save, Check, Volume2, VolumeX, LogOut, RotateCcw, Award } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { authApi } from '../api/auth';
 import { conceptsApi, type SubjectResponse } from '../api/concepts';

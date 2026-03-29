@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Zap, Info, Flag, CheckCircle, AlertTriangle, BookOpen, ChevronRight, X as XIcon } from 'lucide-react';
+import { Zap, Info, Flag, CheckCircle, AlertTriangle, BookOpen, X as XIcon } from 'lucide-react';
 import { useLearningStore } from '../store/learningStore';
 import { learningApi, type ConceptNotes } from '../api/learning';
 import OptionButton from '../components/learning/OptionButton';
@@ -174,69 +174,79 @@ export default function LearnPage() {
           </motion.div>
         )}
 
-        {/* Stats bar */}
+        {/* Quiz Header Card */}
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.15 }}
-          className="flex items-center justify-between mb-6"
+          initial={{ opacity: 0, y: -6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2 }}
+          className="bg-white border border-slate-200/70 rounded-2xl px-4 py-3 mb-5 shadow-sm"
         >
-          <div className="flex items-center gap-2">
-            <MasteryBadge level={concept_progress.mastery_level} size="xs" />
-            <span className="text-xs text-slate-400 truncate max-w-[120px]">{question.topic_name}</span>
-          </div>
-          <div className="flex items-center gap-3 text-xs text-slate-400">
-            {session_stats.current_streak > 0 && (
-              <span className="flex items-center gap-1 text-orange-500 font-medium">
-                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z"/>
-                </svg>
-                {session_stats.current_streak}
-              </span>
-            )}
-            <span className="tabular-nums font-medium">{session_stats.correct_today}/{session_stats.questions_answered_today}</span>
+          {/* Line 1: Concept name (primary) + difficulty */}
+          <div className="flex items-start justify-between gap-3 mb-1.5">
+            <div className="flex items-center gap-2 min-w-0">
+              <MasteryBadge level={concept_progress.mastery_level} size="xs" />
+              <span className="text-sm font-bold text-slate-800 leading-snug">{question.concept_name}</span>
+              {question.attempt_number > 0 && (
+                <span className="flex-shrink-0 text-[10px] font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100">
+                  Retry
+                </span>
+              )}
+            </div>
             <DifficultyBadge level={question.difficulty} />
           </div>
-        </motion.div>
 
-        {/* Concept + Actions row */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.15, delay: 0.05 }}
-          className="mb-4 flex items-center gap-2 flex-wrap"
-        >
-          <span className="text-xs font-medium text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-lg border border-indigo-100">
-            {question.concept_name}
-          </span>
-          {question.attempt_number > 0 && (
-            <span className="text-[10px] font-medium text-amber-600 bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-100">
-              Attempt #{question.attempt_number + 1}
+          {/* Line 2: Topic name + progress stats */}
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs text-slate-400 truncate flex-1 mr-3">{question.topic_name}</span>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {session_stats.current_streak > 0 && (
+                <span className="flex items-center gap-1 text-orange-500 font-bold text-xs">
+                  <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z"/>
+                  </svg>
+                  {session_stats.current_streak}
+                </span>
+              )}
+              <span className="text-xs text-slate-500 font-semibold tabular-nums">
+                {session_stats.correct_today}<span className="text-slate-300 mx-0.5">/</span>{session_stats.questions_answered_today}
+              </span>
+            </div>
+          </div>
+
+          {/* Line 3: Selection context + action buttons */}
+          <div className="flex items-center justify-between border-t border-slate-100 pt-2.5">
+            <span className="text-[11px] text-slate-400 italic truncate flex-1 mr-3">
+              {session.selection_reason || 'New question'}
             </span>
-          )}
-          {session.selection_reason && (
-            <span className="text-[10px] text-slate-400 italic truncate max-w-[200px]" title={session.selection_reason}>
-              {session.selection_reason}
-            </span>
-          )}
-          <div className="ml-auto flex items-center gap-1.5">
-            <button
-              onClick={handleShowNotes}
-              className="flex items-center gap-1 text-xs font-medium text-slate-400 hover:text-indigo-600 transition-colors duration-200 px-2 py-1 rounded-lg hover:bg-indigo-50"
-            >
-              <Info size={14} strokeWidth={1.5} />
-              {loadingNotes ? '...' : showNotes ? 'Hide' : 'Notes'}
-            </button>
-            <div className="relative">
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              {/* Notes button — visible pill */}
               <button
-                onClick={() => { setShowReportMenu(!showReportMenu); setReportDone(false); }}
-                className="text-slate-300 hover:text-rose-500 transition-colors duration-200 p-1 rounded-lg hover:bg-rose-50"
-                title="Report question"
+                onClick={handleShowNotes}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 min-h-[32px] ${
+                  showNotes
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100 border border-indigo-100'
+                }`}
               >
-                <Flag size={14} strokeWidth={1.5} />
+                <Info size={13} strokeWidth={2} />
+                <span>{loadingNotes ? '…' : showNotes ? 'Hide' : 'Notes'}</span>
               </button>
-              <AnimatePresence>
-                {showReportMenu && (
+
+              {/* Flag — visible icon button */}
+              <div className="relative">
+                <button
+                  onClick={() => { setShowReportMenu(!showReportMenu); setReportDone(false); }}
+                  className={`flex items-center justify-center w-8 h-8 rounded-xl transition-all duration-200 ${
+                    showReportMenu
+                      ? 'bg-rose-100 text-rose-500'
+                      : 'bg-slate-100 text-slate-400 hover:bg-rose-50 hover:text-rose-500'
+                  }`}
+                  title="Report question"
+                >
+                  <Flag size={14} strokeWidth={2} />
+                </button>
+                <AnimatePresence>
+                  {showReportMenu && (
                   <motion.div
                     initial={{ opacity: 0, scale: 0.95, y: -4 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -286,6 +296,7 @@ export default function LearnPage() {
                   </motion.div>
                 )}
               </AnimatePresence>
+              </div>
             </div>
           </div>
         </motion.div>
@@ -329,35 +340,38 @@ export default function LearnPage() {
           )}
         </AnimatePresence>
 
-        {/* Question */}
+        {/* Question + Options Card */}
         <motion.div
           key={question.id}
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.2 }}
-          className="mb-6"
+          className="bg-white border border-slate-200/70 rounded-2xl shadow-sm overflow-hidden mb-4"
         >
-          <div className="text-base font-semibold text-slate-900 leading-relaxed">
-            <RichText content={question.question_text} />
+          {/* Question text */}
+          <div className="px-5 pt-5 pb-4 border-b border-slate-100">
+            <div className="text-base font-semibold text-slate-900 leading-relaxed">
+              <RichText content={question.question_text} />
+            </div>
+          </div>
+
+          {/* Options */}
+          <div className="p-3 space-y-2">
+            {question.options && Object.entries(question.options).map(([key, value], idx) => (
+              <OptionButton
+                key={`${question.id}-${key}`}
+                label={value}
+                index={idx}
+                isSelected={selectedOption === key}
+                isCorrect={showFeedback && result?.correct_answer === key}
+                isWrong={showFeedback && selectedOption === key && !result?.is_correct}
+                showResult={showFeedback}
+                disabled={isSubmitting || showFeedback || (selectedOption !== null && selectedOption !== key)}
+                onSelect={() => handleSelect(key)}
+              />
+            ))}
           </div>
         </motion.div>
-
-        {/* Options */}
-        <div className="space-y-2.5 mb-6">
-          {question.options && Object.entries(question.options).map(([key, value], idx) => (
-            <OptionButton
-              key={`${question.id}-${key}`}
-              label={value}
-              index={idx}
-              isSelected={selectedOption === key}
-              isCorrect={showFeedback && result?.correct_answer === key}
-              isWrong={showFeedback && selectedOption === key && !result?.is_correct}
-              showResult={showFeedback}
-              disabled={isSubmitting || showFeedback || (selectedOption !== null && selectedOption !== key)}
-              onSelect={() => handleSelect(key)}
-            />
-          ))}
-        </div>
 
         {/* Loading indicator during auto-submit */}
         <AnimatePresence>

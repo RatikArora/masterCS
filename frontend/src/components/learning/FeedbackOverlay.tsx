@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, X, Flame, BookOpen, ChevronDown, ChevronUp, ArrowRight, RefreshCw, Timer } from 'lucide-react';
+import { Flame, BookOpen, ChevronDown, ChevronUp, ArrowRight, RefreshCw, Timer } from 'lucide-react';
 import type { AnswerResult } from '../../api/learning';
 import Button from '../ui/Button';
 import MascotGuide from '../ui/MascotGuide';

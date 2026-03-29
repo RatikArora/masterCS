@@ -30,6 +30,14 @@ Thumbs.db
 .env.local
 .env.production
 
+# SSH keys / certificates — NEVER commit these
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa
+id_ed25519
+
 # Logs
 *.log
 nohup.out
