@@ -10,6 +10,7 @@ export interface OverallProgress {
   longest_streak: number;
   total_xp: number;
   mastery_distribution: Record<string, number>;
+  weighted_progress: number;
 }
 
 export interface TopicProgress {

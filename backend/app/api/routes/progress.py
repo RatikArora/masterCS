@@ -57,6 +57,13 @@ def get_overview(
             func.sum(case((UserConceptProgress.mastery_level == "learning", 1), else_=0)).label("learning_count"),
             func.sum(case((UserConceptProgress.mastery_level == "familiar", 1), else_=0)).label("familiar_count"),
             func.sum(case((UserConceptProgress.mastery_level == "proficient", 1), else_=0)).label("proficient_count"),
+            func.coalesce(func.sum(case(
+                (UserConceptProgress.mastery_level == "mastered", 1.0),
+                (UserConceptProgress.mastery_level == "proficient", 0.8),
+                (UserConceptProgress.mastery_level == "familiar", 0.5),
+                (UserConceptProgress.mastery_level == "learning", 0.2),
+                else_=0.0,
+            )), 0.0).label("weighted_score"),
         )
         .join(Concept, UserConceptProgress.concept_id == Concept.id)
         .join(Topic, Concept.topic_id == Topic.id)
@@ -66,6 +73,7 @@ def get_overview(
 
     started = int(progress_stats[0] or 0)
     mastered = int(progress_stats[1] or 0)
+    weighted_score = float(progress_stats[6] or 0.0)
 
     # Attempt stats — scoped to this subject via concept_id join
     subject_concept_ids = (
@@ -135,6 +143,7 @@ def get_overview(
         longest_streak=user.longest_streak,
         total_xp=int(subject_xp),
         mastery_distribution=distribution,
+        weighted_progress=round((weighted_score / total_concepts) * 100, 1) if total_concepts > 0 else 0.0,
     )
 
 

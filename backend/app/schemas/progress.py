@@ -12,6 +12,7 @@ class OverallProgress(BaseModel):
     longest_streak: int
     total_xp: int
     mastery_distribution: dict[str, int]  # {"novice": 10, "learning": 5, ...}
+    weighted_progress: float = 0.0  # 0-100 weighted mastery %
 
 
 class TopicProgress(BaseModel):

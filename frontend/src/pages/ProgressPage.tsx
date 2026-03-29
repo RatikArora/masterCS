@@ -211,7 +211,7 @@ function SubjectComparisonBars({ subjects, overviews }: { subjects: SubjectRespo
         color: s.color || subjectPalette[i % subjectPalette.length],
         accuracy: Math.round(ov.overall_accuracy),
         questions: ov.total_questions_answered,
-        masteryPct: ov.total_concepts > 0 ? Math.round((ov.concepts_mastered / ov.total_concepts) * 100) : 0,
+        masteryPct: ov.total_concepts > 0 ? Math.round(ov.weighted_progress) : 0,
       };
     });
 
@@ -336,7 +336,7 @@ export default function ProgressPage() {
   const dist = overview.mastery_distribution;
   const totalAnswered = overview.total_questions_answered;
   const completionPct = overview.total_concepts > 0
-    ? Math.round((overview.concepts_mastered / overview.total_concepts) * 100)
+    ? Math.round(overview.weighted_progress)
     : 0;
 
   const totalDailyQuestions = dailyStats.reduce((a, d) => a + d.questions_answered, 0);
@@ -353,7 +353,7 @@ export default function ProgressPage() {
             {allSubjects.map((s) => {
               const isActive = s.id === subjectId;
               const ov = allOverviews[s.id];
-              const pct = ov ? Math.round((ov.concepts_mastered / Math.max(ov.total_concepts, 1)) * 100) : 0;
+              const pct = ov ? Math.round(ov.weighted_progress) : 0;
               const answered = ov?.total_questions_answered || 0;
               return (
                 <button
@@ -398,7 +398,8 @@ export default function ProgressPage() {
           <div>
             <h1 className="text-xl font-bold text-slate-900">Your Progress</h1>
             <p className="text-sm text-slate-500">
-              {overview.concepts_mastered} of {overview.total_concepts} concepts mastered
+              {overview.concepts_started} of {overview.total_concepts} concepts started
+              {overview.concepts_mastered > 0 && ` · ${overview.concepts_mastered} mastered`}
             </p>
             {allSubjects.length === 1 && (
               <p className="text-xs text-indigo-500 font-medium mt-0.5">{allSubjects[0]?.name}</p>
@@ -644,7 +645,7 @@ export default function ProgressPage() {
                         <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-0.5 text-[10px] text-slate-400">
                           <span>{ov.total_questions_answered} questions</span>
                           <span>{Math.round(ov.overall_accuracy)}% accuracy</span>
-                          <span>{ov.concepts_mastered}/{ov.total_concepts} mastered</span>
+                          <span>{ov.concepts_started}/{ov.total_concepts} started</span>
                         </div>
                       </div>
                       <div className="text-right flex-shrink-0">
