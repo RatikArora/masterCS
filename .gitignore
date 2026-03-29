@@ -48,3 +48,4 @@ arch/
 .pytest_cache/
 .mypy_cache/
 backend/app/db/seed_gate_papers.py
+_qpart*.py
