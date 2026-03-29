@@ -717,11 +717,11 @@ export default function ProgressPage() {
                     <div className="grid grid-cols-2 gap-2 text-xs">
                       <div className="bg-rose-50 rounded-xl px-2.5 py-1.5">
                         <p className="text-[10px] text-rose-400 mb-0.5">Your answer</p>
-                        <p className="text-rose-700 font-medium">{wq.selected_answer}</p>
+                        <p className="text-rose-700 font-medium">{wq.selected_answer_text || wq.selected_answer}</p>
                       </div>
                       <div className="bg-emerald-50 rounded-xl px-2.5 py-1.5">
                         <p className="text-[10px] text-emerald-400 mb-0.5">Correct answer</p>
-                        <p className="text-emerald-700 font-medium">{wq.correct_answer}</p>
+                        <p className="text-emerald-700 font-medium">{wq.correct_answer_text || wq.correct_answer}</p>
                       </div>
                     </div>
                     {wq.explanation && (

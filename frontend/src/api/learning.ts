@@ -51,6 +51,7 @@ export interface LessonCard {
 export interface AnswerResult {
   is_correct: boolean;
   correct_answer: string;
+  correct_answer_text?: string;
   explanation: string | null;
   xp_earned: number;
   confidence_change: number;
@@ -67,7 +68,9 @@ export interface WrongQuestionItem {
   question_id: string;
   question_text: string;
   correct_answer: string;
+  correct_answer_text: string;
   selected_answer: string;
+  selected_answer_text: string;
   explanation: string | null;
   concept_id: string;
   concept_name: string;

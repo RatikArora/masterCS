@@ -50,7 +50,7 @@ export default function OptionButton({
       transition={{ delay: index * 0.04, duration: 0.15 }}
       onClick={onSelect}
       disabled={disabled}
-      className={`w-full flex items-center gap-3.5 px-4 py-3.5 rounded-2xl border transition-all duration-200 text-left ${borderColor} ${bg} ${disabled && !showResult ? 'opacity-40' : ''}`}
+      className={`w-full flex items-center gap-3.5 px-4 py-3.5 rounded-2xl border transition-all duration-200 text-left min-h-[3.5rem] ${borderColor} ${bg} ${disabled && !showResult ? 'opacity-40' : ''}`}
     >
       <span className={`flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-xl text-xs font-semibold transition-all duration-200 ${letterBg}`}>
         {letters[index]}

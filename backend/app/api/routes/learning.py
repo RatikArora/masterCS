@@ -127,11 +127,26 @@ def get_wrong_questions(
             continue
         q, concept_id, concept_name, topic_name = entry
 
+        # Resolve option texts from JSON
+        correct_text = q.correct_answer
+        selected_text = last_answer or ""
+        try:
+            opts = q.options
+            if isinstance(opts, str):
+                opts = json.loads(opts)
+            if isinstance(opts, dict):
+                correct_text = opts.get(q.correct_answer, q.correct_answer)
+                selected_text = opts.get(last_answer, last_answer) if last_answer else ""
+        except (json.JSONDecodeError, TypeError):
+            pass
+
         items.append(WrongQuestionItem(
             question_id=qid,
             question_text=q.question_text,
             correct_answer=q.correct_answer,
+            correct_answer_text=correct_text,
             selected_answer=last_answer or "",
+            selected_answer_text=selected_text,
             explanation=q.explanation,
             concept_id=concept_id,
             concept_name=concept_name,

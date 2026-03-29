@@ -157,7 +157,10 @@ export default function FeedbackOverlay({ result, onContinue, hotStreak = 0 }: F
           {!result.is_correct && (
             <div className="px-3 py-2.5 bg-white/60 rounded-xl border border-rose-100/60">
               <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wider mb-1">Correct answer</p>
-              <p className="text-sm font-medium text-slate-800">{result.correct_answer}</p>
+              <p className="text-sm font-medium text-slate-800">
+                <span className="text-indigo-600 font-bold mr-1.5">{result.correct_answer}.</span>
+                {result.correct_answer_text || result.correct_answer}
+              </p>
             </div>
           )}
 

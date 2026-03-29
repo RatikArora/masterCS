@@ -93,6 +93,11 @@ export const useLearningStore = create<LearningState>((set, get) => ({
         const reverseMap = Object.fromEntries(Object.entries(optionKeyMap).map(([k, v]) => [v, k]));
         data.correct_answer = reverseMap[data.correct_answer] || data.correct_answer;
       }
+      // Resolve correct answer text from the current question's options
+      const currentSession = get().session;
+      if (currentSession?.question?.options) {
+        data.correct_answer_text = currentSession.question.options[data.correct_answer] || data.correct_answer;
+      }
       const newHotStreak = data.is_correct ? hotStreak + 1 : 0;
       set({ result: data, isSubmitting: false, showFeedback: true, hotStreak: newHotStreak });
     } catch {

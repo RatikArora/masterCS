@@ -192,9 +192,21 @@ class MasteryTracker:
             else:
                 review_msg = f"This question will respawn in {mins} minutes."
 
+        # Resolve correct answer text from options
+        correct_answer_text = question.correct_answer
+        try:
+            opts = question.options
+            if isinstance(opts, str):
+                opts = json.loads(opts)
+            if isinstance(opts, dict):
+                correct_answer_text = opts.get(question.correct_answer, question.correct_answer)
+        except (json.JSONDecodeError, TypeError):
+            pass
+
         return {
             "is_correct": is_correct,
             "correct_answer": question.correct_answer,
+            "correct_answer_text": correct_answer_text,
             "explanation": question.explanation,
             "xp_earned": xp,
             "confidence_change": round(progress.confidence_score, 4),

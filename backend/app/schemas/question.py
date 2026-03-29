@@ -26,6 +26,7 @@ class AnswerSubmit(BaseModel):
 class AnswerResult(BaseModel):
     is_correct: bool
     correct_answer: str
+    correct_answer_text: str = ""
     explanation: str | None
     xp_earned: int
     confidence_change: float
@@ -79,7 +80,9 @@ class WrongQuestionItem(BaseModel):
     question_id: str
     question_text: str
     correct_answer: str
+    correct_answer_text: str = ""
     selected_answer: str
+    selected_answer_text: str = ""
     explanation: str | None
     concept_id: str
     concept_name: str
