@@ -138,7 +138,7 @@ export default function Dashboard() {
             </div>
           </div>
           {streak && (
-            <XPBar current={todayXP || streak.questions_today * 15} goal={150} />
+            <XPBar current={todayXP} goal={150} questionsToday={streak.questions_today} />
           )}
         </motion.div>
 
