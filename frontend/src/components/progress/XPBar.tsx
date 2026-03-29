@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Zap, Check, Trophy } from 'lucide-react';
+import { Zap, Check, Trophy, Star } from 'lucide-react';
 
 interface XPBarProps {
   current: number;
@@ -10,23 +10,42 @@ interface XPBarProps {
 export default function XPBar({ current, goal, questionsToday }: XPBarProps) {
   const percent = Math.min((current / Math.max(goal, 1)) * 100, 100);
   const isComplete = current >= goal;
-  const isDouble = current >= goal * 2;
+  const multiplier = Math.floor(current / Math.max(goal, 1));
+  const isDouble = multiplier >= 2;
 
   // Milestone markers
   const milestones = [
-    { at: Math.round(goal * 0.33), label: '' },
-    { at: Math.round(goal * 0.66), label: '' },
-    { at: goal, label: `${goal}` },
+    { at: Math.round(goal * 0.33) },
+    { at: Math.round(goal * 0.66) },
+    { at: goal },
   ];
 
+  const getCompletionMessage = () => {
+    if (multiplier >= 10) return `Incredible! ${multiplier}× daily goal!`;
+    if (multiplier >= 5) return `On fire! ${multiplier}× daily goal!`;
+    if (multiplier >= 3) return `Amazing! ${multiplier}× daily goal!`;
+    if (isDouble) return 'Great work! 2× daily goal!';
+    return 'Goal complete — keep going!';
+  };
+
   return (
-    <div className="bg-white border border-slate-200/60 rounded-2xl px-4 py-3">
+    <div className={`border rounded-2xl px-4 py-3 ${
+      isComplete
+        ? 'bg-gradient-to-br from-emerald-50 to-white border-emerald-200/60'
+        : 'bg-white border-slate-200/60'
+    }`}>
       <div className="flex items-center justify-between mb-2.5">
         <div className="flex items-center gap-2">
           <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${
-            isComplete ? 'bg-emerald-100' : 'bg-amber-50'
+            multiplier >= 5
+              ? 'bg-amber-100'
+              : isComplete
+                ? 'bg-emerald-100'
+                : 'bg-amber-50'
           }`}>
-            {isComplete ? (
+            {multiplier >= 5 ? (
+              <Star size={14} strokeWidth={1.5} className="text-amber-500" />
+            ) : isComplete ? (
               <Trophy size={14} strokeWidth={1.5} className="text-emerald-600" />
             ) : (
               <Zap size={14} strokeWidth={1.5} className="text-amber-500" />
@@ -37,25 +56,29 @@ export default function XPBar({ current, goal, questionsToday }: XPBarProps) {
               {isComplete ? 'Daily Goal Reached!' : 'Daily Goal'}
             </p>
             <p className="text-[10px] text-slate-400">
-              {questionsToday ? `${questionsToday} questions today` : 'Answer questions to earn XP'}
+              {questionsToday
+                ? `${questionsToday} question${questionsToday !== 1 ? 's' : ''} answered today`
+                : 'Answer questions to earn XP'}
             </p>
           </div>
         </div>
         <div className="text-right">
-          <p className={`text-sm font-bold tabular-nums ${isComplete ? 'text-emerald-600' : 'text-indigo-600'}`}>
-            {current.toLocaleString()}
+          <p className={`text-sm font-bold tabular-nums ${
+            multiplier >= 5 ? 'text-amber-600' : isComplete ? 'text-emerald-600' : 'text-indigo-600'
+          }`}>
+            {current.toLocaleString()} XP
           </p>
-          <p className="text-[9px] text-slate-400">/ {goal} XP</p>
+          <p className="text-[9px] text-slate-400">goal: {goal} XP</p>
         </div>
       </div>
 
-      {/* Progress bar with milestones */}
+      {/* Progress bar */}
       <div className="relative">
         <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
           <motion.div
             className={`h-full rounded-full ${
-              isDouble
-                ? 'bg-gradient-to-r from-emerald-400 to-emerald-500'
+              multiplier >= 5
+                ? 'bg-gradient-to-r from-amber-400 to-orange-500'
                 : isComplete
                   ? 'bg-gradient-to-r from-emerald-400 to-emerald-500'
                   : percent > 60
@@ -90,7 +113,7 @@ export default function XPBar({ current, goal, questionsToday }: XPBarProps) {
         </div>
       </div>
 
-      {/* Completion badge */}
+      {/* Completion message */}
       {isComplete && (
         <motion.div
           initial={{ opacity: 0, y: 4 }}
@@ -98,9 +121,9 @@ export default function XPBar({ current, goal, questionsToday }: XPBarProps) {
           transition={{ delay: 0.5 }}
           className="flex items-center gap-1.5 mt-2"
         >
-          <Check size={12} strokeWidth={2} className="text-emerald-500" />
-          <span className="text-[10px] text-emerald-600 font-medium">
-            {isDouble ? 'Amazing! 2× daily goal!' : 'Goal complete — keep the momentum!'}
+          <Check size={12} strokeWidth={2} className={multiplier >= 5 ? 'text-amber-500' : 'text-emerald-500'} />
+          <span className={`text-[10px] font-medium ${multiplier >= 5 ? 'text-amber-600' : 'text-emerald-600'}`}>
+            {getCompletionMessage()}
           </span>
         </motion.div>
       )}
