@@ -239,18 +239,28 @@ class QuestionSelector:
         # Slow-correct concepts: avg response time vs expected time
         # Concepts where user consistently takes >1.5x the expected time are "shaky"
         self._slow_correct_concepts = {}
-        for cid, progress in self._concept_progress_map.items():
-            if progress.exposure_count > 0 and progress.avg_response_time_ms > 0:
-                # Get avg time_estimate for questions in this concept
-                avg_estimate = (
-                    self.db.query(func.avg(Question.time_estimate_seconds))
-                    .join(QuestionConcept, Question.id == QuestionConcept.question_id)
-                    .filter(QuestionConcept.concept_id == cid)
-                    .scalar()
-                ) or 30
-                expected_ms = avg_estimate * 1000
+        active_cids = [
+            cid for cid, p in self._concept_progress_map.items()
+            if p.exposure_count > 0 and p.avg_response_time_ms > 0
+        ]
+        if active_cids:
+            # Single batch query for avg time estimates per concept (no N+1)
+            avg_estimates = (
+                self.db.query(
+                    QuestionConcept.concept_id,
+                    func.avg(Question.time_estimate_seconds),
+                )
+                .join(Question, Question.id == QuestionConcept.question_id)
+                .filter(QuestionConcept.concept_id.in_(active_cids))
+                .group_by(QuestionConcept.concept_id)
+                .all()
+            )
+            estimate_map = {cid: float(avg or 30) for cid, avg in avg_estimates}
+            for cid in active_cids:
+                progress = self._concept_progress_map[cid]
+                expected_ms = estimate_map.get(cid, 30.0) * 1000
                 if expected_ms > 0:
-                    slowness = progress.avg_response_time_ms / expected_ms
+                    slowness = float(progress.avg_response_time_ms) / expected_ms
                     if slowness > 1.3:
                         self._slow_correct_concepts[cid] = min(slowness - 1.0, 2.0)
 

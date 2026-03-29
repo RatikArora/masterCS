@@ -4,7 +4,7 @@ export interface QuestionResponse {
   id: string;
   question_text: string;
   question_type: string;
-  options: string[] | null;
+  options: Record<string, string> | null;
   difficulty: number;
   concept_id: string;
   concept_name: string;

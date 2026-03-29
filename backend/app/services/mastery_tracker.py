@@ -9,6 +9,7 @@ Responsibilities:
   - Detect level-ups and trigger lesson cards
 """
 
+import json
 import uuid
 from datetime import datetime
 from sqlalchemy.orm import Session
@@ -149,10 +150,16 @@ class MasteryTracker:
         if not is_correct:
             concept = self.db.query(Concept).filter(Concept.id == concept_id).first()
             if concept and concept.explanation:
+                kp = concept.key_points or []
+                if isinstance(kp, str):
+                    try:
+                        kp = json.loads(kp)
+                    except (json.JSONDecodeError, TypeError):
+                        kp = []
                 lesson_card = {
                     "title": f"Let's review: {concept.name}",
                     "content": concept.explanation,
-                    "key_points": concept.key_points or [],
+                    "key_points": kp,
                     "type": "mistake_fix",
                 }
 

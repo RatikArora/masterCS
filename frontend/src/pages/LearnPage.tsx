@@ -343,17 +343,17 @@ export default function LearnPage() {
 
         {/* Options */}
         <div className="space-y-2.5 mb-6">
-          {question.options?.map((option, idx) => (
+          {question.options && Object.entries(question.options).map(([key, value], idx) => (
             <OptionButton
-              key={`${question.id}-${idx}`}
-              label={option}
+              key={`${question.id}-${key}`}
+              label={value}
               index={idx}
-              isSelected={selectedOption === option}
-              isCorrect={showFeedback && result?.correct_answer === option}
-              isWrong={showFeedback && selectedOption === option && !result?.is_correct}
+              isSelected={selectedOption === key}
+              isCorrect={showFeedback && result?.correct_answer === key}
+              isWrong={showFeedback && selectedOption === key && !result?.is_correct}
               showResult={showFeedback}
-              disabled={isSubmitting || showFeedback || (selectedOption !== null && selectedOption !== option)}
-              onSelect={() => handleSelect(option)}
+              disabled={isSubmitting || showFeedback || (selectedOption !== null && selectedOption !== key)}
+              onSelect={() => handleSelect(key)}
             />
           ))}
         </div>

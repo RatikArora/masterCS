@@ -5,7 +5,7 @@ class QuestionResponse(BaseModel):
     id: str
     question_text: str
     question_type: str
-    options: list[str] | None
+    options: dict[str, str] | None
     difficulty: int
     concept_id: str
     concept_name: str

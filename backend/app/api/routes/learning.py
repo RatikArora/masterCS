@@ -1,5 +1,7 @@
 """Learning flow routes — the core interactive endpoints."""
 
+import json
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import func, and_
@@ -160,7 +162,7 @@ def get_concept_notes(
         "name": concept.name,
         "topic_name": topic.name if topic else "",
         "explanation": concept.explanation,
-        "key_points": concept.key_points or [],
+        "key_points": json.loads(concept.key_points) if isinstance(concept.key_points, str) else (concept.key_points or []),
     }
 
 

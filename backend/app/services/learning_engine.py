@@ -5,6 +5,7 @@ Coordinates question selection, answer processing, and progress retrieval.
 This is the single entry point for the learning flow API.
 """
 
+import json
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
@@ -73,11 +74,18 @@ class LearningEngine:
             .first()
         )
 
+        # Parse options from JSON string to dict
+        opts = q.options
+        if isinstance(opts, str):
+            opts = json.loads(opts)
+        elif isinstance(opts, list):
+            opts = {chr(65 + i): v for i, v in enumerate(opts)}
+
         question_resp = QuestionResponse(
             id=q.id,
             question_text=q.question_text,
             question_type=q.question_type,
-            options=q.options,
+            options=opts,
             difficulty=q.difficulty,
             concept_id=concept_id,
             concept_name=result["concept_name"],

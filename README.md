@@ -304,7 +304,7 @@ This project is licensed under the MIT License — see the [LICENSE](LICENSE) fi
 
 <div align="center">
 
-**Built with ❤️ for GATE aspirants**
+**Built with ❤️**
 
 [⬆ Back to top](#-mastercs)
 
