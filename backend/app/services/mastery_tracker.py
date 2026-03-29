@@ -123,8 +123,12 @@ class MasteryTracker:
         )
         self.db.add(attempt)
 
-        # Calculate XP
-        xp = self._calculate_xp(question.difficulty, is_correct, progress.correct_streak)
+        # Calculate XP (with decay for repeated questions and mastery cap)
+        xp = self._calculate_xp(
+            question.difficulty, is_correct, progress.correct_streak,
+            mastery_level=progress.mastery_level,
+            question_id=question.id,
+        )
 
         # Detect level-up before adding XP
         old_xp = (self.db.query(User).filter(User.id == self.user_id).first()).total_xp or 0
@@ -212,12 +216,44 @@ class MasteryTracker:
             self.db.flush()
         return progress
 
-    def _calculate_xp(self, difficulty: int, is_correct: bool, correct_streak: int) -> int:
+    def _calculate_xp(
+        self,
+        difficulty: int,
+        is_correct: bool,
+        correct_streak: int,
+        mastery_level: str = "novice",
+        question_id: str | None = None,
+    ) -> int:
         if not is_correct:
             return 2  # Small consolation XP for trying
+
+        # No XP once concept is mastered
+        if mastery_level == "mastered":
+            return 0
+
         base = XP_TABLE.get(difficulty, 10)
         streak_bonus = min(correct_streak, 10) * XP_STREAK_BONUS
-        return base + streak_bonus
+        full_xp = base + streak_bonus
+
+        # Diminishing returns for repeated correct answers on same question
+        if question_id:
+            prior_correct = (
+                self.db.query(UserQuestionAttempt)
+                .filter(
+                    UserQuestionAttempt.user_id == self.user_id,
+                    UserQuestionAttempt.question_id == question_id,
+                    UserQuestionAttempt.is_correct == True,
+                )
+                .count()
+            )
+            if prior_correct >= 4:
+                return 0  # No XP after 4th correct answer
+            elif prior_correct >= 1:
+                # Decay: 100% → 60% → 30% → 10%
+                decay = [1.0, 0.6, 0.3, 0.1][min(prior_correct, 3)]
+                full_xp = max(1, int(full_xp * decay))
+
+        return full_xp
 
     def _update_daily_stats(self, is_correct: bool, response_time_ms: int, xp: int):
         today = datetime.utcnow().date()

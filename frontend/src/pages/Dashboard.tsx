@@ -8,6 +8,7 @@ import { badgesApi, type LevelInfo } from '../api/badges';
 import { useAuthStore } from '../store/authStore';
 import PageContainer from '../components/layout/PageContainer';
 import Card from '../components/ui/Card';
+import Mascot from '../components/ui/Mascot';
 import StreakCounter from '../components/progress/StreakCounter';
 import XPBar from '../components/progress/XPBar';
 import Loading from '../components/ui/Loading';
@@ -76,7 +77,7 @@ export default function Dashboard() {
     return (
       <PageContainer>
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="py-8">
-          <h1 className="text-xl font-semibold text-slate-900 mb-1">Welcome to MasterCS</h1>
+          <h1 className="text-xl font-semibold text-slate-900 mb-1">Welcome to {user?.degree?.toLowerCase().includes('arch') ? 'MasterAR' : 'MasterCS'}</h1>
           <p className="text-slate-500 text-sm mb-8">Select your degree to see relevant subjects.</p>
           <div className="space-y-2.5">
             {DEGREE_OPTIONS.map((opt) => (
@@ -101,12 +102,25 @@ export default function Dashboard() {
   return (
     <PageContainer>
       <div className="space-y-6">
-        {/* Greeting */}
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}>
-          <h1 className="text-xl font-semibold text-slate-900">
-            Hey, {user?.display_name || user?.username}
-          </h1>
-          <p className="text-slate-500 text-sm mt-0.5">Ready to learn something new?</p>
+        {/* Greeting with mascot */}
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }} className="flex items-center gap-4">
+          <Mascot
+            size={56}
+            mood={streak && streak.current_streak >= 3 ? 'celebrating' : streak?.today_completed ? 'happy' : 'waving'}
+            className="flex-shrink-0"
+          />
+          <div>
+            <h1 className="text-xl font-semibold text-slate-900">
+              Hey, {user?.display_name || user?.username}
+            </h1>
+            <p className="text-slate-500 text-sm mt-0.5">
+              {streak && streak.current_streak >= 7
+                ? `${streak.current_streak}-day streak! You're on fire!`
+                : streak?.today_completed
+                  ? 'Great job today! Keep it up!'
+                  : 'Ready to learn something new?'}
+            </p>
+          </div>
         </motion.div>
 
         {/* Stats pills + XP bar */}

@@ -41,7 +41,7 @@ function MiniBar({ data }: { data: DailyStats[] }) {
               animate={{ height: barHeight }}
               transition={{ duration: 0.5, delay: i * 0.03 }}
               className={`w-full rounded-t-sm ${d.questions_answered > 0 ? (isToday ? 'bg-indigo-500' : 'bg-indigo-300') : 'bg-slate-200'}`}
-              title={`${d.date}: ${d.questions_answered} questions, ${Math.round(d.accuracy)}% accuracy`}
+              title={(() => { const dt = new Date(d.date); const day = dt.getDate(); const mon = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][dt.getMonth()]; return `${day} ${mon}: ${d.questions_answered} questions, ${Math.round(d.accuracy)}% accuracy`; })()}
             />
           </div>
         );
@@ -178,17 +178,25 @@ function AccuracyTrendLine({ data }: { data: DailyStats[] }) {
         d={line} fill="none" stroke="#3b82f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
         initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1, ease: 'easeOut' }}
       />
-      {coords.map((c, i) => (
+      {coords.map((c, i) => {
+        const td = new Date(c.date);
+        const label = `${td.getDate()} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][td.getMonth()]}: ${Math.round(c.acc)}%`;
+        return (
         <motion.circle
           key={i} cx={c.x} cy={c.y} r="3.5" fill="white" stroke="#3b82f6" strokeWidth="1.5"
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 + i * 0.06 }}
         >
-          <title>{`${c.date}: ${Math.round(c.acc)}%`}</title>
+          <title>{label}</title>
         </motion.circle>
-      ))}
-      {coords.filter((_, i) => i === 0 || i === coords.length - 1).map((c) => (
-        <text key={c.date} x={c.x} y={H - 6} textAnchor="middle" fontSize="7" fill="#9ca3af">{c.date.slice(5)}</text>
-      ))}
+        );
+      })}
+      {coords.filter((_, i) => i === 0 || i === coords.length - 1).map((c) => {
+        // Format as DD-MMM (e.g., "15 Jan")
+        const d = new Date(c.date);
+        const day = d.getDate();
+        const mon = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()];
+        return <text key={c.date} x={c.x} y={H - 6} textAnchor="middle" fontSize="7" fill="#9ca3af">{day} {mon}</text>;
+      })}
     </svg>
   );
 }

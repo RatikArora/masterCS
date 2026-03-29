@@ -23,6 +23,11 @@ export default function Navbar() {
     return subjectId ? `${base}?subject=${subjectId}` : base;
   };
 
+  // Dynamic app name based on degree
+  const degree = user?.degree || '';
+  const appName = degree.toLowerCase().includes('arch') ? 'MasterAR' :
+                  degree.toLowerCase().includes('tech') ? 'MasterCS' : 'MasterCS';
+
   return (
     <>
       {/* Desktop top nav */}
@@ -31,7 +36,7 @@ export default function Navbar() {
           <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
             <GraduationCap size={16} strokeWidth={1.5} className="text-white" />
           </div>
-          <span className="font-semibold text-sm text-slate-900 tracking-tight">MasterCS</span>
+          <span className="font-semibold text-sm text-slate-900 tracking-tight">{appName}</span>
         </Link>
         <div className="flex items-center gap-0.5">
           {navItems.map((item) => {

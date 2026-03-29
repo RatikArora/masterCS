@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Check, X, Flame, BookOpen, ChevronDown, ChevronUp, ArrowRight, RefreshCw, Timer } from 'lucide-react';
 import type { AnswerResult } from '../../api/learning';
 import Button from '../ui/Button';
+import Mascot from '../ui/Mascot';
 import RichText from '../ui/RichText';
 import { sounds } from '../../utils/sounds';
 
@@ -89,21 +90,16 @@ export default function FeedbackOverlay({ result, onContinue, hotStreak = 0 }: F
         {/* Header */}
         <div className="px-5 pt-5 pb-4">
           <div className="flex items-center gap-3">
-            <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${
-              result.is_correct ? 'bg-emerald-500' : 'bg-rose-500'
-            }`}>
-              {result.is_correct ? (
-                <Check size={18} strokeWidth={2.5} className="text-white" />
-              ) : (
-                <X size={18} strokeWidth={2.5} className="text-white" />
-              )}
-            </div>
+            <Mascot
+              size={36}
+              mood={result.is_correct ? (hotStreak >= 3 ? 'celebrating' : 'happy') : 'sad'}
+            />
             <div className="flex-1 min-w-0">
               <p className={`text-sm font-semibold ${result.is_correct ? 'text-emerald-800' : 'text-rose-800'}`}>
                 {result.is_correct ? 'Correct!' : 'Not quite right'}
               </p>
               <p className="text-xs text-slate-500 mt-0.5">
-                +{result.xp_earned} XP · {result.next_review_message}
+                {result.xp_earned > 0 ? `+${result.xp_earned} XP · ` : ''}{result.next_review_message}
               </p>
             </div>
             {result.streak_count >= 3 && result.is_correct && (
