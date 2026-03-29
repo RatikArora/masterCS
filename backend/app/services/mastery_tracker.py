@@ -273,9 +273,11 @@ class MasteryTracker:
                 if today_stats.streak_day == 0:
                     user.current_streak += 1
                     today_stats.streak_day = user.current_streak
-            elif user.current_streak == 0:
-                user.current_streak = 1
-                today_stats.streak_day = 1
+            else:
+                # Yesterday missed or didn't meet goal — reset streak to 1
+                if today_stats.streak_day == 0:
+                    user.current_streak = 1
+                    today_stats.streak_day = 1
 
             user.longest_streak = max(user.longest_streak, user.current_streak)
 

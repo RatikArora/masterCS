@@ -338,6 +338,28 @@ export default function ProgressPage() {
   return (
     <PageContainer>
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+        {/* Subject Switcher */}
+        {allSubjects.length > 1 && (
+          <div className="flex gap-2 mb-5 overflow-x-auto pb-1 -mx-1 px-1">
+            {allSubjects.map((s) => {
+              const isActive = s.id === subjectId;
+              return (
+                <button
+                  key={s.id}
+                  onClick={() => { if (!isActive) setSearchParams({ subject: s.id }, { replace: true }); }}
+                  className={`flex-shrink-0 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 border ${
+                    isActive
+                      ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm shadow-indigo-600/20'
+                      : 'bg-white text-slate-600 border-slate-200/60 hover:border-indigo-200 hover:text-indigo-600'
+                  }`}
+                >
+                  {s.name}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
         {/* Header with completion ring */}
         <div className="flex items-center gap-4 mb-6">
           <ProgressRing percent={completionPct} size={72} strokeWidth={6}>
@@ -348,6 +370,9 @@ export default function ProgressPage() {
             <p className="text-sm text-slate-500">
               {overview.concepts_mastered} of {overview.total_concepts} concepts mastered
             </p>
+            {allSubjects.length === 1 && (
+              <p className="text-xs text-indigo-500 font-medium mt-0.5">{allSubjects[0]?.name}</p>
+            )}
           </div>
         </div>
       </motion.div>

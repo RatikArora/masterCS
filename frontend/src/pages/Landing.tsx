@@ -43,8 +43,8 @@ export default function Landing() {
             Master<span className="text-indigo-600">CS</span>
           </h1>
           <p className="text-base text-slate-500 max-w-sm mx-auto mb-10 leading-relaxed">
-            Learn Computer Science like a language. Adaptive questions, spaced repetition, 
-            and smart tracking — from basics to interview-ready.
+            Master CS &amp; Architecture for GATE. Adaptive questions, spaced repetition,
+            and smart tracking — from basics to exam-ready.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link to="/register">

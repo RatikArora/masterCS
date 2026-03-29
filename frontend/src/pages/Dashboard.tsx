@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Globe, Building2, ChevronRight, Zap, AlertTriangle, ArrowRight } from 'lucide-react';
 import { conceptsApi, type SubjectResponse } from '../api/concepts';
-import { progressApi, type StreakInfo, type WeakArea } from '../api/progress';
+import { progressApi, type StreakInfo, type WeakArea, type DailyStats } from '../api/progress';
 import { badgesApi, type LevelInfo } from '../api/badges';
 import { useAuthStore } from '../store/authStore';
 import PageContainer from '../components/layout/PageContainer';
@@ -25,6 +25,7 @@ export default function Dashboard() {
   const [streak, setStreak] = useState<StreakInfo | null>(null);
   const [weakAreas, setWeakAreas] = useState<WeakArea[]>([]);
   const [level, setLevel] = useState<LevelInfo | null>(null);
+  const [todayXP, setTodayXP] = useState(0);
   const [loading, setLoading] = useState(true);
   const [pickingDegree, setPickingDegree] = useState(false);
   const navigate = useNavigate();
@@ -35,6 +36,11 @@ export default function Dashboard() {
       conceptsApi.getSubjects().then((r) => setSubjects(r.data)),
       progressApi.getStreak().then((r) => setStreak(r.data)),
       badgesApi.getBadges().then((r) => setLevel(r.data.level)).catch(() => {}),
+      progressApi.getDailyStats(1).then((r) => {
+        const items = r.data.items || r.data;
+        const today = Array.isArray(items) && items.length > 0 ? items[items.length - 1] : null;
+        if (today) setTodayXP(today.xp_earned || 0);
+      }).catch(() => {}),
     ]).finally(() => setLoading(false));
   };
 
@@ -118,7 +124,7 @@ export default function Dashboard() {
             </div>
           </div>
           {streak && (
-            <XPBar current={streak.questions_today * 15} goal={150} />
+            <XPBar current={todayXP || streak.questions_today * 15} goal={150} />
           )}
         </motion.div>
 
