@@ -48,16 +48,28 @@ export default function FeedbackOverlay({ result, onContinue, hotStreak = 0 }: F
     if (result.is_correct) {
       if (hotStreak >= 5) {
         sounds.complete();
+        // Double pulse — triumphant
+        navigator.vibrate?.([60, 40, 120]);
       } else if (hotStreak >= 3) {
         sounds.streak();
+        // Triple quick — streak celebration
+        navigator.vibrate?.([40, 30, 40, 30, 80]);
       } else {
         sounds.correct();
+        // Single short tap — clean correct
+        navigator.vibrate?.(50);
       }
       if (result.level_up) {
-        setTimeout(() => sounds.levelUp(), 400);
+        setTimeout(() => {
+          sounds.levelUp();
+          // Level up: escalating rumble
+          navigator.vibrate?.([30, 20, 60, 20, 100]);
+        }, 400);
       }
     } else {
       sounds.wrong();
+      // Long-short buzz — distinct wrong answer feel
+      navigator.vibrate?.([100, 50, 60]);
     }
   }, [result, hotStreak]);
 
