@@ -9,6 +9,7 @@ import { useAuthStore } from '../store/authStore';
 import PageContainer from '../components/layout/PageContainer';
 import Card from '../components/ui/Card';
 import Mascot from '../components/ui/Mascot';
+import MascotGuide from '../components/ui/MascotGuide';
 import StreakCounter from '../components/progress/StreakCounter';
 import XPBar from '../components/progress/XPBar';
 import Loading from '../components/ui/Loading';
@@ -121,9 +122,18 @@ export default function Dashboard() {
       <div className="space-y-6">
         {/* Greeting with mascot */}
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }} className="flex items-center gap-4">
-          <Mascot
+          <MascotGuide
+            context="dashboard"
             size={56}
-            mood={streak && streak.current_streak >= 3 ? 'celebrating' : streak?.today_completed ? 'happy' : 'waving'}
+            stats={{
+              streak: streak?.current_streak ?? 0,
+              todayCompleted: streak?.today_completed ?? false,
+              todayQuestions: streak?.questions_today ?? 0,
+              totalXP: todayXP,
+              level: level?.level,
+              weakAreas: weakAreas.length,
+            }}
+            userName={user?.display_name || user?.username}
             className="flex-shrink-0"
           />
           <div>

@@ -11,6 +11,7 @@ import MasteryBadge from '../components/progress/MasteryBadge';
 import Loading from '../components/ui/Loading';
 import Button from '../components/ui/Button';
 import RichText from '../components/ui/RichText';
+import Mascot from '../components/ui/Mascot';
 import { sounds } from '../utils/sounds';
 
 const REPORT_REASONS = ['Wrong Answer', 'Unclear Question', 'Duplicate', 'Outdated', 'Other'];
@@ -385,6 +386,32 @@ export default function LearnPage() {
           )}
         </AnimatePresence>
       </div>
+
+      {/* Floating mascot — reacts during learning */}
+      {!showFeedback && session && (
+        <motion.div
+          className="fixed bottom-6 right-6 z-30 hidden md:block"
+          initial={{ opacity: 0, scale: 0.8, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ delay: 1, type: 'spring', stiffness: 200, damping: 20 }}
+        >
+          <Mascot
+            size={44}
+            mood={
+              hotStreak >= 5 ? 'impressed'
+              : hotStreak >= 3 ? 'celebrating'
+              : isSubmitting ? 'thinking'
+              : selectedOption ? 'focused'
+              : 'idle'
+            }
+            message={
+              hotStreak >= 5 ? `${hotStreak} streak!`
+              : isSubmitting ? 'Hmm...'
+              : undefined
+            }
+          />
+        </motion.div>
+      )}
     </div>
   );
 }

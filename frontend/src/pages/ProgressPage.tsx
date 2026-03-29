@@ -10,7 +10,7 @@ import Card from '../components/ui/Card';
 import ProgressRing from '../components/progress/ProgressRing';
 import MasteryBadge from '../components/progress/MasteryBadge';
 import Loading from '../components/ui/Loading';
-import RichText from '../components/ui/RichText';
+import MascotGuide from '../components/ui/MascotGuide';
 
 const masteryColors: Record<string, string> = {
   novice: 'var(--color-gray-400, #9ca3af)',
@@ -390,12 +390,12 @@ export default function ProgressPage() {
           </div>
         )}
 
-        {/* Header with completion ring */}
+        {/* Header with completion ring + mascot */}
         <div className="flex items-center gap-4 mb-6">
           <ProgressRing percent={completionPct} size={72} strokeWidth={6}>
             <span className="text-lg font-bold text-slate-900">{completionPct}%</span>
           </ProgressRing>
-          <div>
+          <div className="flex-1">
             <h1 className="text-xl font-bold text-slate-900">Your Progress</h1>
             <p className="text-sm text-slate-500">
               {overview.concepts_started} of {overview.total_concepts} concepts started
@@ -405,6 +405,19 @@ export default function ProgressPage() {
               <p className="text-xs text-indigo-500 font-medium mt-0.5">{allSubjects[0]?.name}</p>
             )}
           </div>
+          <MascotGuide
+            context="progress"
+            size={52}
+            stats={{
+              accuracy: overview.overall_accuracy,
+              todayQuestions: totalAnswered,
+              totalXP: overview.total_xp,
+              weakAreas: weakAreas.length,
+              conceptsStarted: overview.concepts_started,
+              totalConcepts: overview.total_concepts,
+            }}
+            className="flex-shrink-0 hidden sm:flex"
+          />
         </div>
       </motion.div>
 

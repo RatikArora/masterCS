@@ -7,6 +7,7 @@ import { authApi } from '../api/auth';
 import PageContainer from '../components/layout/PageContainer';
 import Card from '../components/ui/Card';
 import Loading from '../components/ui/Loading';
+import MascotGuide from '../components/ui/MascotGuide';
 import MasteryBadge from '../components/progress/MasteryBadge';
 
 export default function TopicBrowser() {
@@ -89,10 +90,20 @@ export default function TopicBrowser() {
             <ArrowLeft size={14} strokeWidth={1.5} />
             Dashboard
           </button>
-          <h1 className="text-xl font-semibold text-slate-900">Topics</h1>
-          <p className="text-xs text-slate-400 mt-1">
-            {topics.length} topics · {totalConcepts} concepts · {avgMastery}% mastered
-          </p>
+          <div className="flex items-center gap-3">
+            <div className="flex-1">
+              <h1 className="text-xl font-semibold text-slate-900">Topics</h1>
+              <p className="text-xs text-slate-400 mt-1">
+                {topics.length} topics · {totalConcepts} concepts · {avgMastery}% mastered
+              </p>
+            </div>
+            <MascotGuide
+              context="topics"
+              size={48}
+              stats={{ conceptsStarted: topics.filter(t => t.mastery_percent > 0).length, totalConcepts }}
+              className="flex-shrink-0"
+            />
+          </div>
         </motion.div>
 
         {/* Start Learning Button */}

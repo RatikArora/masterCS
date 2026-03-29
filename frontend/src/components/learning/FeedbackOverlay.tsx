@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Check, X, Flame, BookOpen, ChevronDown, ChevronUp, ArrowRight, RefreshCw, Timer } from 'lucide-react';
 import type { AnswerResult } from '../../api/learning';
 import Button from '../ui/Button';
-import Mascot from '../ui/Mascot';
+import MascotGuide from '../ui/MascotGuide';
 import RichText from '../ui/RichText';
 import { sounds } from '../../utils/sounds';
 
@@ -90,9 +90,11 @@ export default function FeedbackOverlay({ result, onContinue, hotStreak = 0 }: F
         {/* Header */}
         <div className="px-5 pt-5 pb-4">
           <div className="flex items-center gap-3">
-            <Mascot
+            <MascotGuide
+              context={result.is_correct ? 'feedback-correct' : 'feedback-wrong'}
               size={36}
-              mood={result.is_correct ? (hotStreak >= 3 ? 'celebrating' : 'happy') : 'sad'}
+              stats={{ hotStreak: hotStreak }}
+              showBubble={false}
             />
             <div className="flex-1 min-w-0">
               <p className={`text-sm font-semibold ${result.is_correct ? 'text-emerald-800' : 'text-rose-800'}`}>
