@@ -1,13 +1,24 @@
+import { useMemo } from 'react';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 interface RichTextProps {
   content: string;
   className?: string;
 }
 
+const codeBlockStyle: React.CSSProperties = {
+  borderRadius: '12px',
+  margin: '8px 0',
+  padding: '14px 16px',
+  fontSize: '12px',
+  lineHeight: '1.6',
+};
+
 export default function RichText({ content, className = '' }: RichTextProps) {
-  const hasMarkdown = /[|`*_#\-\[\]>]/.test(content);
+  const hasMarkdown = useMemo(() => /[|`*_#\-\[\]>]/.test(content), [content]);
 
   if (!hasMarkdown) {
     return <span className={className}>{content}</span>;
@@ -39,17 +50,35 @@ export default function RichText({ content, className = '' }: RichTextProps) {
             </td>
           ),
           code: ({ children, className: codeClass }) => {
-            const isInline = !codeClass;
-            return isInline ? (
-              <code className="bg-slate-100 text-slate-800 px-1.5 py-0.5 rounded text-[11px] font-mono">
-                {children}
-              </code>
-            ) : (
-              <pre className="bg-slate-900 text-emerald-300 rounded-xl p-3 my-2 overflow-x-auto text-[11px] font-mono leading-relaxed">
-                <code>{children}</code>
-              </pre>
+            const isBlock = !!codeClass;
+            if (!isBlock) {
+              return (
+                <code className="bg-slate-100 text-indigo-700 px-1.5 py-0.5 rounded text-[11px] font-mono border border-slate-200">
+                  {children}
+                </code>
+              );
+            }
+            const lang = codeClass?.replace('language-', '') || 'c';
+            const codeStr = String(children).replace(/\n$/, '');
+            return (
+              <div className="relative group">
+                <div className="absolute top-2 right-3 text-[9px] font-mono text-slate-400 uppercase tracking-wider opacity-70">
+                  {lang}
+                </div>
+                <SyntaxHighlighter
+                  style={oneDark}
+                  language={lang}
+                  customStyle={codeBlockStyle}
+                  showLineNumbers={codeStr.split('\n').length > 3}
+                  lineNumberStyle={{ color: '#4b5563', fontSize: '10px', minWidth: '2em' }}
+                  wrapLongLines
+                >
+                  {codeStr}
+                </SyntaxHighlighter>
+              </div>
             );
           },
+          pre: ({ children }) => <>{children}</>,
           p: ({ children }) => <p className="mb-1.5 last:mb-0">{children}</p>,
           strong: ({ children }) => <strong className="font-semibold text-slate-900">{children}</strong>,
           em: ({ children }) => <em className="italic text-slate-600">{children}</em>,
