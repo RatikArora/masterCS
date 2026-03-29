@@ -29,18 +29,19 @@ const difficultyColors: Record<number, string> = { 1: 'text-emerald-600', 2: 'te
 function MiniBar({ data }: { data: DailyStats[] }) {
   const maxQ = Math.max(...data.map((d) => d.questions_answered), 1);
   return (
-    <div className="flex items-end gap-[3px] h-16">
+    <div className="flex items-end gap-[3px]" style={{ height: 64 }}>
       {data.map((d, i) => {
-        const h = (d.questions_answered / maxQ) * 100;
+        const h = Math.max((d.questions_answered / maxQ) * 100, d.questions_answered > 0 ? 8 : 4);
         const isToday = i === data.length - 1;
+        const barHeight = Math.round((h / 100) * 64);
         return (
-          <div key={d.date} className="flex-1 flex flex-col items-center gap-0.5">
+          <div key={d.date} className="flex-1 flex flex-col justify-end items-center" style={{ height: 64 }}>
             <motion.div
               initial={{ height: 0 }}
-              animate={{ height: `${Math.max(h, 4)}%` }}
+              animate={{ height: barHeight }}
               transition={{ duration: 0.5, delay: i * 0.03 }}
               className={`w-full rounded-t-sm ${d.questions_answered > 0 ? (isToday ? 'bg-indigo-500' : 'bg-indigo-300') : 'bg-slate-200'}`}
-              title={`${d.date}: ${d.questions_answered} questions, ${d.accuracy}% accuracy`}
+              title={`${d.date}: ${d.questions_answered} questions, ${Math.round(d.accuracy)}% accuracy`}
             />
           </div>
         );
