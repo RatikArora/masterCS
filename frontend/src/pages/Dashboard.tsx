@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Building2, ChevronRight, AlertTriangle, ArrowRight, Network, Cpu, Code2, BookOpen, Calculator, Crown, Target } from 'lucide-react';
+import { Building2, ChevronRight, AlertTriangle, ArrowRight, Network, Cpu, Code2, BookOpen, Calculator, Crown } from 'lucide-react';
 import { conceptsApi, type SubjectResponse } from '../api/concepts';
 import { progressApi, type StreakInfo, type WeakArea } from '../api/progress';
 import { badgesApi, type LevelInfo } from '../api/badges';
@@ -10,7 +10,6 @@ import PageContainer from '../components/layout/PageContainer';
 import Card from '../components/ui/Card';
 import MascotGuide from '../components/ui/MascotGuide';
 import StreakCounter from '../components/progress/StreakCounter';
-import XPBar from '../components/progress/XPBar';
 import Loading from '../components/ui/Loading';
 
 const DEGREE_OPTIONS = [
@@ -147,12 +146,18 @@ export default function Dashboard() {
 
   return (
     <PageContainer>
-      <div className="space-y-6">
-        {/* Greeting with mascot */}
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }} className="flex items-center gap-4">
+      <div className="space-y-5">
+        {/* ── Header: mascot + greeting (compact, no bubble) ── */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2 }}
+          className="flex items-center gap-3 pt-1"
+        >
           <MascotGuide
             context="dashboard"
-            size={56}
+            size={44}
+            showBubble={false}
             stats={{
               streak: streak?.current_streak ?? 0,
               todayCompleted: streak?.today_completed ?? false,
@@ -164,115 +169,94 @@ export default function Dashboard() {
             userName={user?.display_name || user?.username}
             className="flex-shrink-0"
           />
-          <div>
-            <h1 className="text-xl font-semibold text-slate-900">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-lg font-bold text-slate-900 leading-tight">
               Hey, {user?.display_name || user?.username}
             </h1>
-            <p className="text-slate-500 text-sm mt-0.5">
+            <p className="text-slate-400 text-xs mt-0.5 truncate">
               {streak && streak.current_streak >= 7
-                ? `${streak.current_streak}-day streak! You're on fire!`
+                ? `${streak.current_streak}-day streak — you're on fire!`
                 : streak?.today_completed
-                  ? 'Great job today! Keep it up!'
+                  ? 'Daily goal done — keep going!'
                   : 'Ready to learn something new?'}
             </p>
           </div>
+          {/* Total XP pill — top right */}
+          <div className="flex-shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold bg-gradient-to-r from-indigo-50 to-violet-50 text-indigo-600 border border-indigo-200/70 shadow-sm">
+            <svg className="w-3.5 h-3.5 text-indigo-500" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
+            </svg>
+            <span className="tabular-nums">{(user?.total_xp || 0).toLocaleString()}</span>
+          </div>
         </motion.div>
 
-        {/* Stats pills + XP bar */}
+        {/* ── Compact stats strip: streak | today progress | level ── */}
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.05, duration: 0.2 }}
-          className="space-y-3"
+          className="bg-white border border-slate-200/60 rounded-2xl px-4 py-3 shadow-sm"
         >
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
+            {/* Streak */}
             <StreakCounter count={streak?.current_streak || 0} isActive={streak?.today_completed} />
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold bg-gradient-to-r from-indigo-50 to-violet-50 text-indigo-600 border border-indigo-200/70 shadow-sm">
-              <svg className="w-4 h-4 text-indigo-500" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
-              </svg>
-              <span className="tabular-nums">{(user?.total_xp || 0).toLocaleString()} XP</span>
+
+            {/* Divider */}
+            <div className="w-px h-8 bg-slate-100 flex-shrink-0" />
+
+            {/* Today's progress — questions + XP in one column */}
+            <div className="flex-1 min-w-0">
+              {(() => {
+                const qGoal = 20;
+                const xpGoal = 150;
+                const qDone = streak?.today_completed;
+                const qPct = Math.min(((streak?.questions_today || 0) / qGoal) * 100, 100);
+                const xpPct = Math.min((todayXP / xpGoal) * 100, 100);
+                return (
+                  <>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[11px] font-semibold text-slate-600">Today</span>
+                      <span className="text-[10px] text-slate-400 tabular-nums">
+                        {streak?.questions_today || 0}/{qGoal} q · {todayXP}/{xpGoal} XP
+                      </span>
+                    </div>
+                    {/* questions bar */}
+                    <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden mb-1">
+                      <motion.div
+                        className={`h-full rounded-full ${qDone ? 'bg-gradient-to-r from-emerald-400 to-teal-500' : 'bg-gradient-to-r from-amber-400 to-orange-400'}`}
+                        initial={{ width: 0 }}
+                        animate={{ width: `${qPct}%` }}
+                        transition={{ delay: 0.1, duration: 0.6, ease: 'easeOut' }}
+                      />
+                    </div>
+                    {/* XP bar */}
+                    <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                      <motion.div
+                        className="h-full rounded-full bg-gradient-to-r from-indigo-400 to-violet-500"
+                        initial={{ width: 0 }}
+                        animate={{ width: `${xpPct}%` }}
+                        transition={{ delay: 0.15, duration: 0.6, ease: 'easeOut' }}
+                      />
+                    </div>
+                  </>
+                );
+              })()}
             </div>
-          </div>
-          {streak && (
-            <XPBar current={todayXP} goal={150} questionsToday={streak.questions_today} />
-          )}
-        </motion.div>
 
-        {/* Daily Quest */}
-        {streak && (() => {
-          const questGoal = 20;
-          const questDone = streak.questions_today >= questGoal;
-          const questPct = Math.min((streak.questions_today / questGoal) * 100, 100);
-          return (
-            <motion.div
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.08, duration: 0.2 }}
-            >
-              <div className={`flex items-center gap-3 rounded-2xl px-4 py-3 border shadow-sm ${questDone ? 'bg-gradient-to-r from-emerald-50 to-teal-50 border-emerald-200/60' : 'bg-gradient-to-r from-amber-50 to-yellow-50 border-amber-200/60'}`}>
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm ${questDone ? 'bg-gradient-to-br from-emerald-500 to-teal-600 shadow-emerald-500/20' : 'bg-gradient-to-br from-amber-400 to-orange-500 shadow-amber-500/20'}`}>
-                  <Target size={18} strokeWidth={1.5} className="text-white" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-semibold text-slate-800">Daily Quest</p>
-                    {questDone
-                      ? <span className="text-[10px] font-bold text-emerald-600 bg-emerald-100 rounded-full px-2 py-0.5">Complete!</span>
-                      : <span className="text-[10px] text-slate-400 tabular-nums">{streak.questions_today}/{questGoal}</span>
-                    }
-                  </div>
-                  <p className="text-[11px] text-slate-500 mt-0.5">Answer {questGoal} questions today</p>
-                  <div className="mt-2 bg-white/60 rounded-full h-1.5 overflow-hidden">
-                    <motion.div
-                      className={`h-full rounded-full ${questDone ? 'bg-gradient-to-r from-emerald-500 to-teal-600' : 'bg-gradient-to-r from-amber-400 to-orange-500'}`}
-                      initial={{ width: 0 }}
-                      animate={{ width: `${questPct}%` }}
-                      transition={{ delay: 0.1, duration: 0.5 }}
-                    />
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          );
-        })()}
+            {/* Divider */}
+            <div className="w-px h-8 bg-slate-100 flex-shrink-0" />
 
-        {/* Level card */}
-        {level && (
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1, duration: 0.2 }}
-          >
-            <Link to="/badges" className="block">
-              <div className="bg-gradient-to-br from-indigo-50 via-violet-50 to-purple-50 border border-indigo-200/60 rounded-2xl px-4 py-3 shadow-md hover:shadow-lg hover:border-indigo-300 transition-all duration-200">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm shadow-indigo-500/30">
-                    <Crown size={18} strokeWidth={1.5} className="text-white" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm font-bold text-slate-800">Level {level.level} · {level.title}</p>
-                      <ChevronRight size={16} strokeWidth={1.5} className="text-slate-300 flex-shrink-0" />
-                    </div>
-                    <div className="flex items-center gap-2 mt-1.5">
-                      <div className="flex-1 bg-white/70 rounded-full h-1.5 overflow-hidden">
-                        <motion.div
-                          className="bg-gradient-to-r from-indigo-500 to-violet-600 h-full rounded-full"
-                          initial={{ width: 0 }}
-                          animate={{ width: `${level.progress * 100}%` }}
-                          transition={{ delay: 0.15, duration: 0.5 }}
-                        />
-                      </div>
-                      <span className="text-[10px] text-slate-500 tabular-nums">{level.current_xp}/{level.xp_for_next} XP</span>
-                    </div>
-                    <p className="text-[10px] text-indigo-400 mt-0.5">{level.xp_for_next - level.current_xp} XP to Level {level.level + 1}</p>
-                  </div>
-                </div>
+            {/* Level chip */}
+            <Link to="/badges" className="flex-shrink-0 flex flex-col items-center gap-0.5">
+              <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl flex items-center justify-center shadow-sm shadow-indigo-500/30">
+                <Crown size={14} strokeWidth={1.5} className="text-white" />
               </div>
+              <span className="text-[9px] font-bold text-indigo-600 tabular-nums">
+                {level ? `Lv ${level.level}` : 'Lv 1'}
+              </span>
             </Link>
-          </motion.div>
-        )}
+          </div>
+        </motion.div>
 
         {/* Subjects */}
         <div>
